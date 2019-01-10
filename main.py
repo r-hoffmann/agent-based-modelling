@@ -1,6 +1,4 @@
-from lib import Environment, Agent
+from lib import Car, Intersection, Road
 
-environment = Environment.Environment()
-agent = Agent.Agent(environment)
 
-print(agent.environment)
+print('test')
