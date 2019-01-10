@@ -1,0 +1,7 @@
+A grid cell is 50cm x 50cm
+A Car has size 4 x 8 cells
+A Car requires 2 cells of free space behind it 
+A Lane has width 8 cells
+A Road has width 16 (2 * 8) cells
+
+A basic Intersection has size 16 x 16 cells
