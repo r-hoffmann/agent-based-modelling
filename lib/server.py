@@ -5,7 +5,7 @@ from mesa.visualization.ModularVisualization import ModularServer
 from lib import Intersection, Car
 
 def agent_portrayal(agent):
-    portrayal = {"Shape": "square",
+    portrayal = {"Shape": "rect",
                  "Filled": "true"}
 
     if agent.velocity > 0:
@@ -18,18 +18,27 @@ def agent_portrayal(agent):
         portrayal["r"] = 0.2
     return portrayal
 
-grid = CanvasGrid(agent_portrayal, 10, 10, 500, 500)
+# size 216x216 is big enough to hold 10 cars per lane and the intersection
+size = 216
+grid = CanvasGrid(agent_portrayal, size, size, 500, 500)
+
 chart = ChartModule([
     {"Label": "Average speed", "Color": "#0000FF"}],
     data_collector_name='datacollector'
 )
 
 model_params = {
-    "N": UserSettableParameter('slider', "Number of agents", 100, 2, 200, 1,
+    "spawn_rate": UserSettableParameter('slider', "Spawn rate per minute", 0, 10, 200, 1,
                                description="Choose how many agents to include in the model"),
-    "width": 10,
-    "height": 10
+    "max_speed": UserSettableParameter('slider', "Max speed horizontal road", 0, 50, 200, 1,
+                               description="Choose how many agents to include in the model"),
+    #  "max_speed_horizontal": UserSettableParameter('slider', "Max speed horizontal road", 0, 50, 200, 1,
+    #                            description="Choose how many agents to include in the model"),
+    # "max_speed_vertical": UserSettableParameter('slider', "Max speed vertical road", 0, 50, 200, 1,
+    #                            description="Choose how many agents to include in the model"),
+    "a_factor": UserSettableParameter('slider', "Antisocial factor", .05, 0, 1, .01,
+                               description="Choose how many agents to include in the model")
 }
 
-server = ModularServer(Intersection, [grid, chart], "Intersection model", model_params)
-server.port = 8521
+server = ModularServer(Intersection.Intersection, [grid, chart], "Intersection model", model_params)
+server.port = 8522

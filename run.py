@@ -1,3 +1,3 @@
 from lib import server
 
-server.launch()
+server.server.launch()
