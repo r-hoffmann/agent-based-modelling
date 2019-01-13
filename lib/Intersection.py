@@ -1,38 +1,57 @@
-from mesa import Model
-from mesa.time import RandomActivation
-from mesa.space import MultiGrid
 import random
+
+from mesa import Model
+from mesa.space import MultiGrid
+from mesa.time import SimultaneousActivation
+
 from lib import Car
+from lib import Road
+
 
 class Intersection(Model):
-    def __init__(self, spawn_rate, max_speed, a_factor, starting_positions=[[0,0],[0,0],[0,0],[0,0]]):
-        self.max_speed = max_speed
+    def __init__(self, spawn_rate, max_speed, a_factor):
+        super().__init__()
+
+        self.roads = self.create_roads(spawn_rate, max_speed)
         self.cars = []
-        self.starting_positions = starting_positions
+
         # size 216x216 is big enough to hold 10 cars per lane and the intersection
         size = 216
         self.grid = MultiGrid(size, size, True)
-        self.schedule = RandomActivation(self)
+        self.schedule = SimultaneousActivation(self)
 
-        # @todo add some cars
-        for _ in range(5):
-            self.add_car()
+        # self.running = True
+        # self.datacollector.collect(self)
 
-    def add_car(self):
-        direction = 1 # @todo
-        acceleration = 1 # @todo
-        unique_id = len(self.cars)
-        car = Car.Car(self, unique_id, direction, acceleration)
-        # Add the agent to a random lane
-        position = random.choice(self.starting_positions)
+    def create_roads(self, spawn_rate, max_speed):
+        roads = []
+
+        for [x, y, direction] in [[100, 0, 6], [215, 100, 4], [108, 215, 2], [0, 108, 0]]:
+            roads.append(Road.Road(self, (x, y), direction, spawn_rate, max_speed))
+
+        return roads
+
+    def add_car(self, car):
+        self.cars.append(car)
         self.schedule.add(car)
-        self.grid.place_agent(car, (position[0], position[1]))
+        self.grid.place_agent(car, car.location)
 
     def step(self):
+        for road in self.roads:
+            road.step()
+
+            if road.free_space and len(road.car_queue) > 0:
+                car = road.car_queue.pop()
+                self.grid.place_agent(car, car.location)
+
         self.schedule.step()
         # collect data
         # self.datacollector.collect(self)
 
-    def run_model(self, n):
+    def run_model(self, n=200):
         for _ in range(n):
             self.step()
+
+
+model = Intersection(1, 50, 0.2)
+model.run_model()
