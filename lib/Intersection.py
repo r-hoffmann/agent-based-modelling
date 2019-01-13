@@ -5,13 +5,14 @@ import random
 from lib import Car
 
 class Intersection(Model):
-    def __init__(self, spawn_rate, max_speed, a_factor, starting_positions=[[0,0],[0,0],[0,0],[0,0]]):
+    def __init__(self, spawn_rate, max_speed, a_factor, size=216):
         self.max_speed = max_speed
         self.cars = []
-        self.starting_positions = starting_positions
-        # size 216x216 is big enough to hold 10 cars per lane and the intersection
-        size = 216
-        self.grid = MultiGrid(size, size, True)
+        self.size = size
+        # starting position: bottom, top, left, right.
+        self.starting_positions = [[self.size//2 + 4, 0], [self.size//2 - 4, self.size-1], [0, self.size//2 - 4], [self.size-1, self.size//2 + 4]]
+
+        self.grid = MultiGrid(size, size, False)
         self.schedule = RandomActivation(self)
 
         # @todo add some cars
@@ -21,10 +22,12 @@ class Intersection(Model):
     def add_car(self):
         direction = 1 # @todo
         acceleration = 1 # @todo
-        unique_id = len(self.cars)
-        car = Car.Car(self, unique_id, direction, acceleration)
+        unique_id = len(self.schedule.agents)
         # Add the agent to a random lane
-        position = random.choice(self.starting_positions)
+        initial_direction = random.randint(0,3)
+        position = self.starting_positions[initial_direction]
+
+        car = Car.Car(unique_id, self, direction, acceleration, position, initial_direction)
         self.schedule.add(car)
         self.grid.place_agent(car, (position[0], position[1]))
 
