@@ -1,4 +1,4 @@
-from lib import Car
+from lib.Car import Car
 import random
 
 
@@ -21,18 +21,19 @@ class Road:
         self.check_locations = self.calculate_locations()
         self.free_space = True
 
-    def spawn_car(self, id):
+    def spawn_car(self, unique_id):
         # TODO: Add different velocities by increasing the sigma
         velocity = int(random.gauss(self.max_speed, 0))
         bmw_factor = random.random()
-        car = Car.Car(
-            id,
+        car = Car(
+            unique_id,
             self.model,
             self,
             self.start_location,
             self.direction,
+            self.direction,  # Should be changed to another direction
             velocity,
-            20,
+            30,
             bmw_factor
         )
 
@@ -66,5 +67,3 @@ class Road:
 
         # Check whether a new car could be spawned on the road
         self.check_free_space()
-
-

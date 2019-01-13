@@ -1,3 +1,4 @@
-from lib import server
+from lib.server import server
 
-server.server.launch()
+server.port = 8522
+server.launch()

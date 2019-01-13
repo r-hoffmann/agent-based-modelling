@@ -1,4 +1,4 @@
-from lib import Intersection
+from lib.Intersection import Intersection
 
 
 class Fourway(Intersection):
