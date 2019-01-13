@@ -7,13 +7,12 @@ from lib.Intersection import Intersection
 
 def agent_portrayal(agent):
     portrayal = {
-        "Shape": "arrowHead",
+        "Shape": "rect",
         "Color": "red",
         "Filled": "true",
         "Layer": 0,
         "w": 4,
-        "h": 8,
-        "scale": 8
+        "h": 8
     }
 
     if agent.current_direction == 0 or agent.current_direction == 4:
@@ -21,6 +20,7 @@ def agent_portrayal(agent):
         portrayal['w'] = 8
 
     if agent.velocity == 0:
+        portrayal['Layer'] = 1
         portrayal['Color'] = 'grey'
 
     return portrayal

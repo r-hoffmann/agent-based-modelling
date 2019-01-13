@@ -50,16 +50,16 @@ class Car(Agent):
 
         # if nearing intersection
         if self.initial_direction == 0:
-            if self.pos[0] + velocity + stop_distance >= self.model.size // 2 - 8:
+            if self.pos[0] + velocity + stop_distance >= self.model.size // 2 - 10:
                 return True
         elif self.initial_direction == 2:
-            if self.pos[1] - velocity - stop_distance >= self.model.size // 2 + 8:
+            if self.pos[1] + velocity + stop_distance >= self.model.size // 2 - 10:
                 return True
         elif self.initial_direction == 4:
-            if self.pos[0] - velocity - stop_distance <= self.model.size // 2 - 8:
+            if self.pos[0] - velocity - stop_distance <= self.model.size // 2 + 8:
                 return True
         elif self.initial_direction == 6:
-            if self.pos[1] + velocity + stop_distance <= self.model.size // 2 + 8:
+            if self.pos[1] - velocity - stop_distance <= self.model.size // 2 + 8:
                 return True
 
         return False
@@ -93,17 +93,16 @@ class Car(Agent):
         self.velocity = new_velocity
 
     def move(self):
-        pass
-        # self.update_velocity()
-        #
-        # if self.initial_direction == 0:
-        #     self.model.grid.move_agent(self, (self.pos[0] + self.velocity, self.pos[1]))
-        # elif self.initial_direction == 2:
-        #     self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
-        # elif self.initial_direction == 4:
-        #     self.model.grid.move_agent(self, (self.pos[0] - self.velocity, self.pos[1]))
-        # elif self.initial_direction == 6:
-        #     self.model.grid.move_agent(self, (self.pos[0], self.pos[1] + self.velocity))
+        self.update_velocity()
+
+        if self.initial_direction == 0:
+            self.model.grid.move_agent(self, (self.pos[0] + self.velocity, self.pos[1]))
+        elif self.initial_direction == 2:
+            self.model.grid.move_agent(self, (self.pos[0], self.pos[1] + self.velocity))
+        elif self.initial_direction == 4:
+            self.model.grid.move_agent(self, (self.pos[0] - self.velocity, self.pos[1]))
+        elif self.initial_direction == 6:
+            self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
 
     def step(self):
         self.move()

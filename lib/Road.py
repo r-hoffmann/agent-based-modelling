@@ -46,11 +46,11 @@ class Road:
         if self.direction == 0:
             return [[x + a, y] for a in range(11)]
         elif self.direction == 2:
-            return [[x, y - a] for a in range(11)]
+            return [[x, y + a] for a in range(11)]
         elif self.direction == 4:
             return [[x - a, y] for a in range(11)]
         elif self.direction == 6:
-            return [[x, y + a] for a in range(11)]
+            return [[x, y - a] for a in range(11)]
 
     def check_free_space(self):
         free = True
