@@ -1,41 +1,53 @@
 from mesa import Model
-from mesa.time import RandomActivation
 from mesa.space import MultiGrid
-import random
-from lib import Car
+from mesa.time import BaseScheduler
+from mesa.datacollection import DataCollector
+from lib.Road import Road
+import matplotlib.pyplot as plt
+
 
 class Intersection(Model):
-    def __init__(self, spawn_rate, max_speed, a_factor, size=216):
-        self.max_speed = max_speed
+    def __init__(self, spawn_probability, max_speed, a_factor):
+        super().__init__()
+
+        self.roads = self.create_roads(spawn_probability, max_speed)
         self.cars = []
-        self.size = size
-        # starting position: bottom, top, left, right.
-        self.starting_positions = [[self.size//2 + 4, 0], [self.size//2 - 4, self.size-1], [0, self.size//2 - 4], [self.size-1, self.size//2 + 4]]
 
-        self.grid = MultiGrid(size, size, False)
-        self.schedule = RandomActivation(self)
+        # size 216x216 is big enough to hold 10 cars per lane and the intersection
+        self.size = 216
+        self.grid = MultiGrid(self.size, self.size, True)
+        self.schedule = BaseScheduler(self)
+        self.datacollector = DataCollector({"Cars": lambda m: self.schedule.get_agent_count()})
 
-        # @todo add some cars
-        for _ in range(5):
-            self.add_car()
+        self.running = True
+        self.datacollector.collect(self)
 
-    def add_car(self):
-        direction = 1 # @todo
-        acceleration = 1 # @todo
-        unique_id = len(self.schedule.agents)
-        # Add the agent to a random lane
-        initial_direction = random.randint(0,3)
-        position = self.starting_positions[initial_direction]
+    def create_roads(self, spawn_probability, max_speed):
+        roads = []
 
-        car = Car.Car(unique_id, self, direction, acceleration, position, initial_direction)
-        self.schedule.add(car)
-        self.grid.place_agent(car, (position[0], position[1]))
+        for [x, y, direction] in [[103, 215, 6], [215, 112, 4], [112, 0, 2], [0, 103, 0]]:
+            roads.append(Road(self, (x, y), direction, spawn_probability, max_speed))
+
+        return roads
 
     def step(self):
-        self.schedule.step()
-        # collect data
-        # self.datacollector.collect(self)
+        for road in self.roads:
+            road.step()
 
-    def run_model(self, n):
+            if road.free_space and len(road.car_queue) > 0:
+                car = road.car_queue.pop()
+                self.schedule.add(car)
+                self.grid.place_agent(car, car.pos)
+
+        self.schedule.step()
+
+        # Save the statistics
+        self.datacollector.collect(self)
+
+    def run_model(self, n=100):
         for _ in range(n):
             self.step()
+
+
+model = Intersection(0.1, 20, 0.2)
+model.run_model()

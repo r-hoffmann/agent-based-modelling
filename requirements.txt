@@ -1,3 +1,4 @@
+IPython
 jupyter
 matplotlib
 mesa
