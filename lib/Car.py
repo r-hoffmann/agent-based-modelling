@@ -28,6 +28,8 @@ class Car(Agent):
         self.velocity = velocity
         self.acceleration = acceleration
         self.bmw_factor = bmw_factor
+        self.length = 8
+        self.width = 4
 
     def see(self):
         return True
@@ -43,12 +45,45 @@ class Car(Agent):
         # based on https://www.autoexamens.nl/remweg-berekenen/
         return math.ceil(new_velocity / 10 * 3 + (new_velocity / 10) ** 2)
 
-    def determine_action(self, velocity):
-        # bad name for the function (unclear)
-        stop_distance = self.calculate_stop_distance(velocity)
-        # print(stop_distance)
+    def approaching_another_vehicle(self, velocity, stop_distance):
+        # @todo add the case where the another vehicle is not standing still
+        free_space_ahead = 0
+        cell_ahead = self.pos
+        if self.initial_direction == 0:
+            cell_ahead = (self.pos[0] + self.length, self.pos[1])
+        elif self.initial_direction == 2:
+            cell_ahead = (self.pos[0], self.pos[1] + self.length)
+        elif self.initial_direction == 4:
+            cell_ahead = (self.pos[0] - self.length, self.pos[1])
+        elif self.initial_direction == 6:
+            cell_ahead = (self.pos[0], self.pos[1] - self.length)
 
-        # if nearing intersection
+        while self.model.grid.is_cell_empty(cell_ahead):
+            free_space_ahead += 1
+            if self.initial_direction == 0:
+                x_position = self.pos[0] + self.length + free_space_ahead
+                if not (0 < x_position < self.model.size):
+                    return False
+                cell_ahead = (x_position, self.pos[1])
+            elif self.initial_direction == 2:
+                y_position = self.pos[1] + self.length + free_space_ahead
+                if not (0 < y_position < self.model.size):
+                    return False
+                cell_ahead = (self.pos[0], y_position)
+            elif self.initial_direction == 4:
+                x_position = self.pos[0] - self.length - free_space_ahead
+                if not (0 < x_position < self.model.size):
+                    return False
+                cell_ahead = (x_position, self.pos[1])
+            elif self.initial_direction == 6:
+                y_position = self.pos[1] - self.length - free_space_ahead
+                if not (0 < y_position < self.model.size):
+                    return False
+                cell_ahead = (self.pos[0], y_position)
+        # @todo introduce minimal_free_space_ahead?
+        return free_space_ahead < 3
+
+    def approaching_intersection(self, velocity, stop_distance):
         if self.initial_direction == 0:
             if self.pos[0] + velocity + stop_distance >= self.model.size // 2 - 10:
                 return True
@@ -63,6 +98,18 @@ class Car(Agent):
                 return True
 
         return False
+
+    def determine_action(self, velocity):
+        # bad name for the function (unclear)
+        stop_distance = self.calculate_stop_distance(velocity)
+        # print(stop_distance)
+
+        # if nearing other vehicle
+        brake_because_vehicle = self.approaching_another_vehicle(velocity, stop_distance)
+
+        # if nearing intersection
+        brake_because_intersection = self.approaching_intersection(velocity, stop_distance)
+        return brake_because_vehicle or brake_because_intersection
 
     def calculate_braking_speed(self, velocity):
         stop_distance = self.calculate_stop_distance(velocity)
