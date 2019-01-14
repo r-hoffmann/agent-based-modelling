@@ -8,7 +8,7 @@ from lib.Intersection import Intersection
 def agent_portrayal(agent):
     portrayal = {
         "Shape": "rect",
-        "Color": "red",
+        "Color": "#FFAAAA",
         "Filled": "true",
         "Layer": 0,
         "w": 4,
@@ -19,20 +19,32 @@ def agent_portrayal(agent):
         portrayal['h'] = 4
         portrayal['w'] = 8
 
+    #@todo add goal maybe as a color; e.g. when the car wants to go left, color left side orange?
+
     if agent.velocity == 0:
         portrayal['Layer'] = 1
-        portrayal['Color'] = 'grey'
+        portrayal['Color'] = '#FF0000'
 
     return portrayal
 
 
 # size 216x216 is big enough to hold 10 cars per lane and the intersection
 size = 216
-grid = CanvasGrid(agent_portrayal, size, size, 500, 500)
+grid = CanvasGrid(agent_portrayal, size, size, 2 * size, 2 * size)
 
-chart = ChartModule([
-    {"Label": "Cars", "Color": "#0000FF"}],
-    data_collector_name='datacollector'
+chart_average_speed = ChartModule([
+    {"Label": "Average speed", "Color": "#0000FF"}],
+    data_collector_name='average_speed'
+)
+
+chart_throughput = ChartModule([
+    {"Label": "Throughput", "Color": "#FF0000"}],
+    data_collector_name='throughput'
+)
+
+chart_waiting_cars = ChartModule([
+    {"Label": "Number of waiting cars", "Color": "#00FF00"}],
+    data_collector_name='waiting_cars'
 )
 
 model_params = {
@@ -45,4 +57,6 @@ model_params = {
     "a_factor": UserSettableParameter('slider', "Antisocial factor", .05, 0, 1, .01)
 }
 
-server = ModularServer(Intersection, [grid, chart], "Intersection Model", model_params)
+ChartModule.local_includes.append('visualisation_extra.js')
+
+server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_waiting_cars], "Intersection Model", model_params)
