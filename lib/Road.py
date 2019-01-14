@@ -1,4 +1,5 @@
 from lib.Car import Car
+from lib.direction import Direction
 import random
 
 
@@ -43,13 +44,13 @@ class Road:
     def calculate_locations(self):
         (x, y) = self.start_location
 
-        if self.direction == 0:
+        if self.direction == Direction.RIGHT:
             return [[x + a, y] for a in range(11)]
-        elif self.direction == 2:
+        elif self.direction == Direction.TOP:
             return [[x, y + a] for a in range(11)]
-        elif self.direction == 4:
+        elif self.direction == Direction.LEFT:
             return [[x - a, y] for a in range(11)]
-        elif self.direction == 6:
+        elif self.direction == Direction.BOTTOM:
             return [[x, y - a] for a in range(11)]
 
     def check_free_space(self):

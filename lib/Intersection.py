@@ -5,6 +5,7 @@ from mesa.datacollection import DataCollector
 from lib.Road import Road
 import matplotlib.pyplot as plt
 
+from lib.direction import Direction
 
 class Intersection(Model):
     def __init__(self, spawn_probability, max_speed, a_factor):
@@ -29,9 +30,16 @@ class Intersection(Model):
     def create_roads(self, spawn_probability, max_speed):
         roads = []
 
-        for [x, y, direction] in [[103, 215, 6], [215, 112, 4], [112, 0, 2], [0, 103, 0]]:
-            roads.append(Road(self, (x, y), direction, spawn_probability, max_speed))
+        # for [x, y, direction] in [[103, 215, 6], [215, 112, 4], [112, 0, 2], [0, 103, 0]]:
+        #     roads.append(Road(self, (x, y), direction, spawn_probability, max_speed))
 
+        # init 4 roads
+
+        roads.append(Road(self, (103, 215), Direction.BOTTOM, spawn_probability, max_speed))
+        roads.append(Road(self, (215, 112,), Direction.LEFT, spawn_probability, max_speed))
+        roads.append(Road(self, (112, 0,), Direction.TOP, spawn_probability, max_speed))
+        roads.append(Road(self, (0, 103), Direction.RIGHT, spawn_probability, max_speed))
+        
         return roads
 
     def step(self):

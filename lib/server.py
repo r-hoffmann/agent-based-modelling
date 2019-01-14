@@ -3,7 +3,7 @@ from mesa.visualization.UserParam import UserSettableParameter
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule
 from lib.Intersection import Intersection
-
+from lib.direction import Direction
 
 def agent_portrayal(agent):
     portrayal = {
@@ -15,7 +15,7 @@ def agent_portrayal(agent):
         "h": 8
     }
 
-    if agent.current_direction == 0 or agent.current_direction == 4:
+    if agent.current_direction == Direction.RIGHT or agent.current_direction == Direction.LEFT:
         portrayal['h'] = 4
         portrayal['w'] = 8
 

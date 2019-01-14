@@ -1,5 +1,6 @@
 from mesa import Agent
 import math
+from lib.direction import Direction
 
 
 class Car(Agent):
@@ -49,33 +50,33 @@ class Car(Agent):
         # @todo add the case where the another vehicle is not standing still
         free_space_ahead = 0
         cell_ahead = self.pos
-        if self.initial_direction == 0:
+        if self.initial_direction == Direction.RIGHT:
             cell_ahead = (self.pos[0] + self.length, self.pos[1])
-        elif self.initial_direction == 2:
+        elif self.initial_direction == Direction.TOP:
             cell_ahead = (self.pos[0], self.pos[1] + self.length)
-        elif self.initial_direction == 4:
+        elif self.initial_direction == Direction.LEFT:
             cell_ahead = (self.pos[0] - self.length, self.pos[1])
-        elif self.initial_direction == 6:
+        elif self.initial_direction == Direction.BOTTOM:
             cell_ahead = (self.pos[0], self.pos[1] - self.length)
 
         while self.model.grid.is_cell_empty(cell_ahead):
             free_space_ahead += 1
-            if self.initial_direction == 0:
+            if self.initial_direction == Direction.RIGHT:
                 x_position = self.pos[0] + self.length + free_space_ahead
                 if not (0 < x_position < self.model.size):
                     return False
                 cell_ahead = (x_position, self.pos[1])
-            elif self.initial_direction == 2:
+            elif self.initial_direction == Direction.TOP:
                 y_position = self.pos[1] + self.length + free_space_ahead
                 if not (0 < y_position < self.model.size):
                     return False
                 cell_ahead = (self.pos[0], y_position)
-            elif self.initial_direction == 4:
+            elif self.initial_direction == Direction.LEFT:
                 x_position = self.pos[0] - self.length - free_space_ahead
                 if not (0 < x_position < self.model.size):
                     return False
                 cell_ahead = (x_position, self.pos[1])
-            elif self.initial_direction == 6:
+            elif self.initial_direction == Direction.BOTTOM:
                 y_position = self.pos[1] - self.length - free_space_ahead
                 if not (0 < y_position < self.model.size):
                     return False
@@ -84,16 +85,16 @@ class Car(Agent):
         return free_space_ahead < 3
 
     def approaching_intersection(self, velocity, stop_distance):
-        if self.initial_direction == 0:
+        if self.initial_direction == Direction.RIGHT:
             if self.pos[0] + velocity + stop_distance >= self.model.size // 2 - 10:
                 return True
-        elif self.initial_direction == 2:
+        elif self.initial_direction == Direction.TOP:
             if self.pos[1] + velocity + stop_distance >= self.model.size // 2 - 10:
                 return True
-        elif self.initial_direction == 4:
+        elif self.initial_direction == Direction.LEFT:
             if self.pos[0] - velocity - stop_distance <= self.model.size // 2 + 8:
                 return True
-        elif self.initial_direction == 6:
+        elif self.initial_direction == Direction.BOTTOM:
             if self.pos[1] - velocity - stop_distance <= self.model.size // 2 + 8:
                 return True
 
@@ -142,13 +143,13 @@ class Car(Agent):
     def move(self):
         self.update_velocity()
 
-        if self.initial_direction == 0:
+        if self.initial_direction == Direction.RIGHT:
             self.model.grid.move_agent(self, (self.pos[0] + self.velocity, self.pos[1]))
-        elif self.initial_direction == 2:
+        elif self.initial_direction == Direction.TOP:
             self.model.grid.move_agent(self, (self.pos[0], self.pos[1] + self.velocity))
-        elif self.initial_direction == 4:
+        elif self.initial_direction == Direction.LEFT:
             self.model.grid.move_agent(self, (self.pos[0] - self.velocity, self.pos[1]))
-        elif self.initial_direction == 6:
+        elif self.initial_direction == Direction.BOTTOM:
             self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
 
     def step(self):
