@@ -3,3 +3,5 @@
 .idea/
 bin/
 venv/
+
+\.ipynb_checkpoints/
