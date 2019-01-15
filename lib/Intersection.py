@@ -15,7 +15,6 @@ class Intersection(Model):
         for field in args:
             setattr(self, field, args[field])
 
-
         self.roads = []
         self.create_roads()
         self.cars = []
@@ -38,7 +37,7 @@ class Intersection(Model):
             Road(
                 self, 
                 (112, 0), 
-                Direction.TOP, 
+                Direction.NORTH,
                 self.p_car_spawn_north, 
                 [
                     self.p_north_to_north,
@@ -54,7 +53,7 @@ class Intersection(Model):
             Road(
                 self, 
                 (215, 112), 
-                Direction.LEFT, 
+                Direction.WEST,
                 self.p_car_spawn_west, 
                 [
                     self.p_west_to_north,
@@ -70,7 +69,7 @@ class Intersection(Model):
             Road(
                 self, 
                 (0, 103), 
-                Direction.RIGHT, 
+                Direction.EAST,
                 self.p_car_spawn_east, 
                 [
                     self.p_east_to_north,
@@ -86,7 +85,7 @@ class Intersection(Model):
             Road(
                 self, 
                 (103, 215), 
-                Direction.BOTTOM, 
+                Direction.SOUTH,
                 self.p_car_spawn_south, 
                 [
                     self.p_south_to_north,
@@ -97,7 +96,6 @@ class Intersection(Model):
                 self.max_speed_vertical
             )
         )
-
 
     def step(self):
         for road in self.roads:
@@ -130,3 +128,4 @@ class Intersection(Model):
 
     def get_waiting_cars(self):
         return sum([1 for agent in self.schedule.agents if agent.velocity==0])
+
