@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 from lib.direction import Direction
 
+
 class Intersection(Model):
     def __init__(self, p_car_spawn, max_speed, a_factor):
         # @TODO: can/should be made different on different roads
@@ -43,10 +44,10 @@ class Intersection(Model):
 
         p_next_directions = [self.p_direction_right, self.p_direction_top, self.p_direction_left, self.p_direction_bottom]
 
-        roads.append(Road(self, (103, 215), Direction.BOTTOM, p_car_spawn, p_next_directions, max_speed))
-        roads.append(Road(self, (215, 112,), Direction.LEFT, p_car_spawn, p_next_directions, max_speed))
-        roads.append(Road(self, (112, 0,), Direction.TOP, p_car_spawn, p_next_directions, max_speed))
-        roads.append(Road(self, (0, 103), Direction.RIGHT, p_car_spawn, p_next_directions, max_speed))
+        roads.append(Road(self, (103, 215), Direction.SOUTH, p_car_spawn, p_next_directions, max_speed))
+        roads.append(Road(self, (215, 112,), Direction.WEST, p_car_spawn, p_next_directions, max_speed))
+        roads.append(Road(self, (112, 0,), Direction.NORTH, p_car_spawn, p_next_directions, max_speed))
+        roads.append(Road(self, (0, 103), Direction.EAST, p_car_spawn, p_next_directions, max_speed))
         
         return roads
 
