@@ -57,7 +57,7 @@ def agent_portrayal(agent):
 
 # size 216x216 is big enough to hold 10 cars per lane and the intersection
 size = 216
-grid = CanvasGrid(agent_portrayal, size, size, 2 * size, 2 * size)
+grid = CanvasGrid(agent_portrayal, size, size, 3 * size, 3 * size)
 
 chart_average_speed = ChartModule([
     {"Label": "Average speed", "Color": "#0000FF"}],
