@@ -40,7 +40,8 @@ class Road:
             next_direction,
             velocity,
             30,
-            bmw_factor
+            bmw_factor,
+            self.model.schedule.steps
         )
 
         self.car_queue.insert(0, car)

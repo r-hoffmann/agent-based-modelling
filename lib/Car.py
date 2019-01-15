@@ -4,7 +4,7 @@ from lib.direction import Direction
 
 
 class Car(Agent):
-    def __init__(self, unique_id, model, road, location, initial_direction, next_direction, velocity, acceleration, bmw_factor):
+    def __init__(self, unique_id, model, road, location, initial_direction, next_direction, velocity, acceleration, bmw_factor, start_step):
         """
         Creates the car
 
@@ -27,6 +27,9 @@ class Car(Agent):
         self.initial_direction = initial_direction
         self.current_direction = initial_direction
         self.next_direction = next_direction
+
+        self.start_step = start_step
+        self.stop_step = 0
 
         self.velocity = velocity
         self.acceleration = acceleration
@@ -151,14 +154,17 @@ class Car(Agent):
     def move(self):
         self.update_velocity()
 
-        if self.initial_direction == Direction.EAST:
-            self.model.grid.move_agent(self, (self.pos[0] + self.velocity, self.pos[1]))
-        elif self.initial_direction == Direction.NORTH:
-            self.model.grid.move_agent(self, (self.pos[0], self.pos[1] + self.velocity))
-        elif self.initial_direction == Direction.WEST:
-            self.model.grid.move_agent(self, (self.pos[0] - self.velocity, self.pos[1]))
-        elif self.initial_direction == Direction.SOUTH:
-            self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
+        if self.velocity > 0:
+            if self.initial_direction == Direction.EAST:
+                self.model.grid.move_agent(self, (self.pos[0] + self.velocity, self.pos[1]))
+            elif self.initial_direction == Direction.NORTH:
+                self.model.grid.move_agent(self, (self.pos[0], self.pos[1] + self.velocity))
+            elif self.initial_direction == Direction.WEST:
+                self.model.grid.move_agent(self, (self.pos[0] - self.velocity, self.pos[1]))
+            elif self.initial_direction == Direction.SOUTH:
+                self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
+        elif self.velocity == 0 and self.stop_step == 0:
+            self.stop_step = self.model.schedule.steps
 
     def step(self):
         self.move()
