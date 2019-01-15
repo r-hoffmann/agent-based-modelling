@@ -23,9 +23,11 @@ class Car(Agent):
         self.model = model
         self.road = road
         self.pos = location
+
         self.initial_direction = initial_direction
         self.current_direction = initial_direction
         self.next_direction = next_direction
+
         self.velocity = velocity
         self.acceleration = acceleration
         self.bmw_factor = bmw_factor
@@ -45,6 +47,7 @@ class Car(Agent):
     def calculate_stop_distance(self, new_velocity):
         # based on https://www.autoexamens.nl/remweg-berekenen/
         return math.ceil(new_velocity / 10 * 3 + (new_velocity / 10) ** 2)
+       
 
     def approaching_another_vehicle(self, velocity, stop_distance):
         # @todo add the case where the another vehicle is not standing still
@@ -84,6 +87,7 @@ class Car(Agent):
         # @todo introduce minimal_free_space_ahead?
         return free_space_ahead < 3
 
+    # hoe werkt dit?
     def approaching_intersection(self, velocity, stop_distance):
         if self.initial_direction == Direction.RIGHT:
             if self.pos[0] + velocity + stop_distance >= self.model.size // 2 - 10:
@@ -112,9 +116,17 @@ class Car(Agent):
         brake_because_intersection = self.approaching_intersection(velocity, stop_distance)
         return brake_because_vehicle or brake_because_intersection
 
-    def calculate_braking_speed(self, velocity):
+    # HELPERS
+    def get_braking_speed(self, velocity):
         stop_distance = self.calculate_stop_distance(velocity)
         return int(velocity ** 2 / 2 * stop_distance)
+
+    # CAR movement functions
+    def brake(self):
+        braking_speed = self.get_braking_speed(self.velocity)
+        self.velocity -= braking_speed
+        if self.velocity < 0:
+            self.velocity = 0
 
     def update_velocity(self):
         # todo: slow down if car is in front
@@ -130,11 +142,7 @@ class Car(Agent):
                 # Continue with current speed
                 return
             else:
-                # Continue while braking
-                braking_speed = self.calculate_braking_speed(self.velocity)
-                self.velocity -= braking_speed
-                if self.velocity < 0:
-                    self.velocity = 0
+                self.brake()
                 return
 
         # continue while accelerating

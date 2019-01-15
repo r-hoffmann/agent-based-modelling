@@ -11,19 +11,32 @@ def agent_portrayal(agent):
         "Color": "#FFAAAA",
         "Filled": "true",
         "Layer": 0,
-        "w": 4,
-        "h": 8
+        "w": None,
+        "h": None
     }
 
     if agent.current_direction == Direction.RIGHT or agent.current_direction == Direction.LEFT:
         portrayal['h'] = 4
         portrayal['w'] = 8
 
-    #@todo add goal maybe as a color; e.g. when the car wants to go left, color left side orange?
+    elif agent.current_direction == Direction.TOP or agent.current_direction == Direction.BOTTOM:
+        portrayal['h'] = 8
+        portrayal['w'] = 4
+
 
     if agent.velocity == 0:
         portrayal['Layer'] = 1
         portrayal['Color'] = '#FF0000'
+
+    #@todo add goal maybe as a color; e.g. when the car wants to go left, color left side orange?
+    if agent.next_direction == Direction.RIGHT:
+        portrayal['Color'] = '#03ff03'
+    elif agent.next_direction == Direction.LEFT:
+        portrayal['Color'] = '#ff0303'
+    elif agent.next_direction == Direction.TOP:
+        portrayal['Color'] = '#ffc105'
+    elif agent.next_direction == Direction.BOTTOM:
+        portrayal['Color'] = '#8205ff'       
 
     return portrayal
 
@@ -48,7 +61,7 @@ chart_waiting_cars = ChartModule([
 )
 
 model_params = {
-    "spawn_probability": UserSettableParameter('slider', "Spawn Probability per Time Step", 0.3, 0, 1, 0.01),
+    "p_car_spawn": UserSettableParameter('slider', "Spawn Probability per Time Step", 0.3, 0, 1, 0.01),
     "max_speed": UserSettableParameter('slider', "Max speed horizontal road", 5, 0, 130, 1),
     #  "max_speed_horizontal": UserSettableParameter('slider', "Max speed horizontal road", 0, 50, 200, 1,
     #                            description="Choose how many agents to include in the model"),

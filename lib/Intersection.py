@@ -8,10 +8,16 @@ import matplotlib.pyplot as plt
 from lib.direction import Direction
 
 class Intersection(Model):
-    def __init__(self, spawn_probability, max_speed, a_factor):
+    def __init__(self, p_car_spawn, max_speed, a_factor):
+        # @TODO: can/should be made different on different roads
+        self.p_direction_left = 0.25
+        self.p_direction_right = 0.25
+        self.p_direction_top = 0.25
+        self.p_direction_bottom = 0.25
+
         super().__init__()
 
-        self.roads = self.create_roads(spawn_probability, max_speed)
+        self.roads = self.create_roads(p_car_spawn, max_speed)
         self.cars = []
 
         # size 216x216 is big enough to hold 10 cars per lane and the intersection
@@ -27,18 +33,20 @@ class Intersection(Model):
         self.throughput.collect(self)
         self.waiting_cars.collect(self)
 
-    def create_roads(self, spawn_probability, max_speed):
+    def create_roads(self, p_car_spawn, max_speed):
         roads = []
 
         # for [x, y, direction] in [[103, 215, 6], [215, 112, 4], [112, 0, 2], [0, 103, 0]]:
-        #     roads.append(Road(self, (x, y), direction, spawn_probability, max_speed))
+        #     roads.append(Road(self, (x, y), direction, p_car_spawn, max_speed))
 
         # init 4 roads
 
-        roads.append(Road(self, (103, 215), Direction.BOTTOM, spawn_probability, max_speed))
-        roads.append(Road(self, (215, 112,), Direction.LEFT, spawn_probability, max_speed))
-        roads.append(Road(self, (112, 0,), Direction.TOP, spawn_probability, max_speed))
-        roads.append(Road(self, (0, 103), Direction.RIGHT, spawn_probability, max_speed))
+        p_next_directions = [self.p_direction_right, self.p_direction_top, self.p_direction_left, self.p_direction_bottom]
+
+        roads.append(Road(self, (103, 215), Direction.BOTTOM, p_car_spawn, p_next_directions, max_speed))
+        roads.append(Road(self, (215, 112,), Direction.LEFT, p_car_spawn, p_next_directions, max_speed))
+        roads.append(Road(self, (112, 0,), Direction.TOP, p_car_spawn, p_next_directions, max_speed))
+        roads.append(Road(self, (0, 103), Direction.RIGHT, p_car_spawn, p_next_directions, max_speed))
         
         return roads
 
