@@ -8,16 +8,15 @@ import matplotlib.pyplot as plt
 from lib.direction import Direction
 
 class Intersection(Model):
-    def __init__(self, p_car_spawn, max_speed, a_factor):
+    def __init__(self, **args):
         # @TODO: can/should be made different on different roads
-        self.p_direction_left = 0.25
-        self.p_direction_right = 0.25
-        self.p_direction_top = 0.25
-        self.p_direction_bottom = 0.25
-
         super().__init__()
+        for field in args:
+            setattr(self, field, args[field])
 
-        self.roads = self.create_roads(p_car_spawn, max_speed)
+
+        self.roads = []
+        self.create_roads()
         self.cars = []
 
         # size 216x216 is big enough to hold 10 cars per lane and the intersection
@@ -33,22 +32,71 @@ class Intersection(Model):
         self.throughput.collect(self)
         self.waiting_cars.collect(self)
 
-    def create_roads(self, p_car_spawn, max_speed):
-        roads = []
+    def create_roads(self):
+        self.roads.append(
+            Road(
+                self, 
+                (112, 0), 
+                Direction.TOP, 
+                self.p_car_spawn_north, 
+                [
+                    self.p_north_to_north,
+                    self.p_north_to_west,
+                    self.p_north_to_east,
+                    self.p_north_to_south
+                ], 
+                self.max_speed_vertical
+            )
+        )
 
-        # for [x, y, direction] in [[103, 215, 6], [215, 112, 4], [112, 0, 2], [0, 103, 0]]:
-        #     roads.append(Road(self, (x, y), direction, p_car_spawn, max_speed))
-
-        # init 4 roads
-
-        p_next_directions = [self.p_direction_right, self.p_direction_top, self.p_direction_left, self.p_direction_bottom]
-
-        roads.append(Road(self, (103, 215), Direction.BOTTOM, p_car_spawn, p_next_directions, max_speed))
-        roads.append(Road(self, (215, 112,), Direction.LEFT, p_car_spawn, p_next_directions, max_speed))
-        roads.append(Road(self, (112, 0,), Direction.TOP, p_car_spawn, p_next_directions, max_speed))
-        roads.append(Road(self, (0, 103), Direction.RIGHT, p_car_spawn, p_next_directions, max_speed))
+        self.roads.append(
+            Road(
+                self, 
+                (215, 112), 
+                Direction.LEFT, 
+                self.p_car_spawn_west, 
+                [
+                    self.p_west_to_north,
+                    self.p_west_to_west,
+                    self.p_west_to_east,
+                    self.p_west_to_south
+                ], 
+                self.max_speed_horizontal
+            )
+        )
         
-        return roads
+        self.roads.append(
+            Road(
+                self, 
+                (0, 103), 
+                Direction.RIGHT, 
+                self.p_car_spawn_east, 
+                [
+                    self.p_east_to_north,
+                    self.p_east_to_west,
+                    self.p_east_to_east,
+                    self.p_east_to_south
+                ], 
+                self.max_speed_horizontal
+            )
+        )
+
+        self.roads.append(
+            Road(
+                self, 
+                (103, 215), 
+                Direction.BOTTOM, 
+                self.p_car_spawn_south, 
+                [
+                    self.p_south_to_north,
+                    self.p_south_to_west,
+                    self.p_south_to_east,
+                    self.p_south_to_south
+                ], 
+                self.max_speed_vertical
+            )
+        )
+
 
     def step(self):
         for road in self.roads:
