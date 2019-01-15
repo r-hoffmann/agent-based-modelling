@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 from lib.direction import Direction
 
+
 class Intersection(Model):
     def __init__(self, **args):
         # @TODO: can/should be made different on different roads

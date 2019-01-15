@@ -49,13 +49,13 @@ class Road:
     def calculate_locations(self):
         (x, y) = self.start_location
 
-        if self.direction == Direction.RIGHT:
+        if self.direction == Direction.EAST:
             return [[x + a, y] for a in range(11)]
-        elif self.direction == Direction.TOP:
+        elif self.direction == Direction.NORTH:
             return [[x, y + a] for a in range(11)]
-        elif self.direction == Direction.LEFT:
+        elif self.direction == Direction.WEST:
             return [[x - a, y] for a in range(11)]
-        elif self.direction == Direction.BOTTOM:
+        elif self.direction == Direction.SOUTH:
             return [[x, y - a] for a in range(11)]
 
     def check_free_space(self):

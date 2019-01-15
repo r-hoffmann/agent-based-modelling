@@ -5,45 +5,48 @@ from mesa.visualization.modules import ChartModule
 from lib.Intersection import Intersection
 from lib.direction import Direction
 
+
 def agent_portrayal(agent):
     portrayal = {
-        "Shape": "rect",
+        "Shape": "arrowHead",
         "Color": "#FFAAAA",
         "Filled": "true",
-        "Layer": 0,
-        "w": None,
-        "h": None
+        "Layer": 2,
+        # "w": None,
+        # "h": None,
+        "scale": 20,
+        "heading_x": 1,
+        "heading_y": 0,
     }
 
-    if agent.current_direction == Direction.RIGHT or agent.current_direction == Direction.LEFT:
-        portrayal['h'] = 4
-        portrayal['w'] = 8
+    # if agent.current_direction == Direction.RIGHT or agent.current_direction == Direction.LEFT:
+    #     portrayal['h'] = 4
+    #     portrayal['w'] = 8
+    #
+    # elif agent.current_direction == Direction.TOP or agent.current_direction == Direction.BOTTOM:
+    #     portrayal['h'] = 8
+    #     portrayal['w'] = 4
 
-    elif agent.current_direction == Direction.TOP or agent.current_direction == Direction.BOTTOM:
-        portrayal['h'] = 8
-        portrayal['w'] = 4
-
-
-    if agent.velocity == 0:
-        portrayal['Layer'] = 1
-        portrayal['Color'] = '#FF0000'
-
-    #@todo add goal maybe as a color; e.g. when the car wants to go left, color left side orange?
-    if agent.next_direction == Direction.RIGHT:
-        portrayal['Color'] = '#03ff03'
-    elif agent.next_direction == Direction.LEFT:
-        portrayal['Color'] = '#ff0303'
-    elif agent.next_direction == Direction.TOP:
-        portrayal['Color'] = '#ffc105'
-    elif agent.next_direction == Direction.BOTTOM:
-        portrayal['Color'] = '#8205ff'       
+    # if agent.velocity == 0:
+    #     portrayal['Layer'] = 1
+    #     portrayal['Color'] = '#FF0000'
+    #
+    # # @todo add goal maybe as a color; e.g. when the car wants to go left, color left side orange?
+    # if agent.next_direction == Direction.RIGHT:
+    #     portrayal['Color'] = '#03ff03'
+    # elif agent.next_direction == Direction.LEFT:
+    #     portrayal['Color'] = '#ff0303'
+    # elif agent.next_direction == Direction.TOP:
+    #     portrayal['Color'] = '#ffc105'
+    # elif agent.next_direction == Direction.BOTTOM:
+    #     portrayal['Color'] = '#8205ff'
 
     return portrayal
 
 
 # size 216x216 is big enough to hold 10 cars per lane and the intersection
 size = 216
-grid = CanvasGrid(agent_portrayal, size, size, 2 * size, 2 * size)
+grid = CanvasGrid(agent_portrayal, size, size, 4 * size, 4 * size)
 
 chart_average_speed = ChartModule([
     {"Label": "Average speed", "Color": "#0000FF"}],
@@ -93,4 +96,5 @@ model_params = {
 
 ChartModule.local_includes.append('visualisation_extra.js')
 
-server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_waiting_cars], "Intersection Model", model_params)
+server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_waiting_cars],
+                       "Intersection Model", model_params)
