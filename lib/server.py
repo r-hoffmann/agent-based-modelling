@@ -19,27 +19,28 @@ def agent_portrayal(agent):
         "heading_y": 0,
     }
 
-    # if agent.current_direction == Direction.RIGHT or agent.current_direction == Direction.LEFT:
-    #     portrayal['h'] = 4
-    #     portrayal['w'] = 8
-    #
-    # elif agent.current_direction == Direction.TOP or agent.current_direction == Direction.BOTTOM:
-    #     portrayal['h'] = 8
-    #     portrayal['w'] = 4
+    if agent.current_direction == Direction.EAST:
+        portrayal['heading_x'] = 1
+        portrayal['heading_y'] = 0
+    elif agent.current_direction == Direction.SOUTH:
+        portrayal['heading_x'] = 0
+        portrayal['heading_y'] = -1
+    elif agent.current_direction == Direction.WEST:
+        portrayal['heading_x'] = -1
+        portrayal['heading_y'] = 0
+    elif agent.current_direction == Direction.NORTH:
+        portrayal['heading_x'] = 0
+        portrayal['heading_y'] = 1
 
-    # if agent.velocity == 0:
-    #     portrayal['Layer'] = 1
-    #     portrayal['Color'] = '#FF0000'
-    #
     # # @todo add goal maybe as a color; e.g. when the car wants to go left, color left side orange?
-    # if agent.next_direction == Direction.RIGHT:
-    #     portrayal['Color'] = '#03ff03'
-    # elif agent.next_direction == Direction.LEFT:
-    #     portrayal['Color'] = '#ff0303'
-    # elif agent.next_direction == Direction.TOP:
-    #     portrayal['Color'] = '#ffc105'
-    # elif agent.next_direction == Direction.BOTTOM:
-    #     portrayal['Color'] = '#8205ff'
+    if agent.next_direction == Direction.EAST:
+        portrayal['Color'] = '#03ff03'
+    elif agent.next_direction == Direction.WEST:
+        portrayal['Color'] = '#ff0303'
+    elif agent.next_direction == Direction.NORTH:
+        portrayal['Color'] = '#ffc105'
+    elif agent.next_direction == Direction.SOUTH:
+        portrayal['Color'] = '#8205ff'
 
     return portrayal
 
