@@ -11,7 +11,7 @@ def agent_portrayal(agent):
         "Shape": "arrowHead",
         "Color": "#FFAAAA",
         "Filled": "true",
-        "Layer": 2,
+        "Layer": 100,
         "scale": 15,
         "heading_x": 1,
         "heading_y": 0,
