@@ -3,6 +3,7 @@ from mesa.visualization.UserParam import UserSettableParameter
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule
 from lib.Intersection import Intersection
+from lib.Fourway import Fourway
 from lib.direction import Direction
 
 
@@ -59,6 +60,10 @@ def agent_portrayal(agent):
 size = 216
 grid = CanvasGrid(agent_portrayal, size, size, 3 * size, 3 * size)
 
+# Revise grid drawing
+grid.package_includes = ["CanvasModule.js", "InteractionHandler.js"]
+grid.local_includes = ["assets/js/GridDraw.js"]
+
 chart_average_speed = ChartModule([
     {"Label": "Average speed", "Color": "#0000FF"}],
     data_collector_name='average_speed'
@@ -76,7 +81,7 @@ chart_waiting_cars = ChartModule([
 
 model_params = {
     "general": UserSettableParameter('static_text', value="General"),
-    "max_speed_horizontal": UserSettableParameter('slider', "Max speed horizontal road", 20, 10, 30, 1),
+    "max_speed_horizontal": UserSettableParameter('slider', "Max speed horizontal road", 20, 0, 30, 1),
     "max_speed_vertical": UserSettableParameter('slider', "Max speed vertical road", 5, 0, 30, 1),
     "a_factor": UserSettableParameter('slider', "Antisocial factor mean", .05, 0, 1, .01),
     "north": UserSettableParameter('static_text', value="From North"),
@@ -85,7 +90,7 @@ model_params = {
     "p_north_to_west": UserSettableParameter('slider', 'To West', 0.33, 0, 1, 0.01),
     "p_north_to_east": UserSettableParameter('slider', 'To East', 0.33, 0, 1, 0.01),
     "p_north_to_south": UserSettableParameter('slider', 'To South', 0.33, 0, 1, 0.01),
-    "west": UserSettableParameter('static_text', value="From North"),
+    "west": UserSettableParameter('static_text', value="From West"),
     "p_car_spawn_west": UserSettableParameter('slider', "Spawn Probability", 0.3, 0, 1, 0.01),
     "p_west_to_north": UserSettableParameter('slider', 'To North', 0.33, 0, 1, 0.01),
     "p_west_to_west": UserSettableParameter('slider', 'To West', 0.01, 0, 1, 0.01),
@@ -105,7 +110,11 @@ model_params = {
     "p_south_to_south": UserSettableParameter('slider', 'To South', 0.01, 0, 1, 0.01),
 }
 
-ChartModule.local_includes.append('visualisation_extra.js')
+# Currently working on Fourway, change accordingly
+for local_include in Fourway().local_includes:
+    ChartModule.local_includes.append(local_include)
+
+ChartModule.local_includes.append('assets/js/visualisation_extra.js')
 
 server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_waiting_cars],
-                       "Intersection Model", model_params)
+                       "Fourway Model", model_params)
