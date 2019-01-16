@@ -182,6 +182,29 @@ class Car(Agent):
         elif self.current_direction == Direction.SOUTH:
             self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
 
+    def long_turn(self):
+        # Checks if a car will make a long turn at a intersection
+        if self.initial_direction == Direction.NORTH and self.next_direction == Direction.WEST:
+            return True
+        elif self.initial_direction == Direction.SOUTH and self.next_direction == Direction.EAST:
+            return True
+        elif self.initial_direction == Direction.WEST and self.next_direction == Direction.SOUTH:
+            return True
+        elif self.initial_direction == Direction.EAST and self.next_direction == Direction.NORTH:
+            return True
+        return False
+
+    def short_turn(self):
+        if self.initial_direction == Direction.NORTH and self.next_direction == Direction.EAST:
+            return True
+        elif self.initial_direction == Direction.SOUTH and self.next_direction == Direction.WEST:
+            return True
+        elif self.initial_direction == Direction.WEST and self.next_direction == Direction.NORTH:
+            return True
+        elif self.initial_direction == Direction.EAST and self.next_direction == Direction.SOUTH:
+            return True
+        return False
+
     def intersection_long_turn(self):
         pass
 
@@ -217,8 +240,6 @@ class Car(Agent):
                 else:
                     self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
         else:
-            print('test')
-            print(self.current_direction, self.next_direction)
             # set stop counter when car first arives at the stopline
             if self.velocity == 0 and self.stop_step == 0:
                 self.stop_step = self.model.schedule.steps
@@ -227,7 +248,10 @@ class Car(Agent):
             if self.current_direction == self.next_direction:
                 self.intersection_move_ahead()
             else:
-                pass
+                if self.long_turn():
+                    self.intersection_long_turn()
+                elif self.short_turn():
+                    self.intersection_short_turn()
 
 
 
