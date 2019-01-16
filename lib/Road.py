@@ -90,7 +90,6 @@ class Road:
         self.free_space = free
 
     def step(self):
-        print(self.direction, self.start_location, self.stop_line_pos)
         if random.random() <= self.p_car_spawn:
             self.spawn_car(len(self.model.cars))
 

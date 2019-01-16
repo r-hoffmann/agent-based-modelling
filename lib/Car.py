@@ -37,7 +37,8 @@ class Car(Agent):
         self.length = 8
         self.width = 4
 
-    def see(self):
+    def see(self, direction):
+
         return True
 
     def next(self):
@@ -151,6 +152,24 @@ class Car(Agent):
         # continue while accelerating
         self.velocity = new_velocity
 
+
+    def at_intersection(self):
+        # for some reason, the stop position of the car is always 9 cells away from the actual stopline, thus:
+        d = 9 # HARDCODED BADDD
+
+        if self.current_direction == Direction.EAST and (self.pos[0] + d == self.road.stop_line_pos[0]):
+            return True        
+        elif self.current_direction == Direction.WEST and (self.pos[0] - d == self.road.stop_line_pos[0]):
+            return True
+        elif self.current_direction == Direction.NORTH and (self.pos[1] + d == self.road.stop_line_pos[1]):
+            return True
+        elif self.current_direction == Direction.SOUTH and (self.pos[1] - d == self.road.stop_line_pos[1]):
+            return True
+
+        return False
+
+
+
     def move(self):
         self.update_velocity()
 
@@ -163,8 +182,12 @@ class Car(Agent):
                 self.model.grid.move_agent(self, (self.pos[0] - self.velocity, self.pos[1]))
             elif self.initial_direction == Direction.SOUTH:
                 self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
-        elif self.velocity == 0 and self.stop_step == 0:
-            self.stop_step = self.model.schedule.steps
+
+        elif self.velocity == 0:
+            # set stop counter when car first arives at the stopline
+            if self.at_intersection() and self.stop_step == 0:
+                self.stop_step = self.model.schedule.steps
+                print(self.stop_step)
 
     def step(self):
         self.move()
