@@ -51,7 +51,7 @@ class Car(Agent):
     def calculate_stop_distance(self, new_velocity):
         # based on https://www.autoexamens.nl/remweg-berekenen/
         return math.ceil(new_velocity / 10 * 3 + (new_velocity / 10) ** 2)
-       
+
 
     def approaching_another_vehicle(self, velocity, stop_distance):
         # @todo add the case where the another vehicle is not standing still
@@ -66,43 +66,46 @@ class Car(Agent):
         elif self.initial_direction == Direction.SOUTH:
             cell_ahead = (self.pos[0], self.pos[1] - self.length)
 
-        while self.model.grid.is_cell_empty(cell_ahead):
-            free_space_ahead += 1
-            if self.initial_direction == Direction.EAST:
-                x_position = self.pos[0] + self.length + free_space_ahead
-                if not (0 < x_position < self.model.size):
-                    return False
-                cell_ahead = (x_position, self.pos[1])
-            elif self.initial_direction == Direction.NORTH:
-                y_position = self.pos[1] + self.length + free_space_ahead
-                if not (0 < y_position < self.model.size):
-                    return False
-                cell_ahead = (self.pos[0], y_position)
-            elif self.initial_direction == Direction.WEST:
-                x_position = self.pos[0] - self.length - free_space_ahead
-                if not (0 < x_position < self.model.size):
-                    return False
-                cell_ahead = (x_position, self.pos[1])
-            elif self.initial_direction == Direction.SOUTH:
-                y_position = self.pos[1] - self.length - free_space_ahead
-                if not (0 < y_position < self.model.size):
-                    return False
-                cell_ahead = (self.pos[0], y_position)
+        if 0 < cell_ahead[0] < self.model.size and 0 < cell_ahead[1] < self.model.size:
+            while self.model.grid.is_cell_empty(cell_ahead):
+                free_space_ahead += 1
+                if self.initial_direction == Direction.EAST:
+                    x_position = self.pos[0] + self.length + free_space_ahead
+                    if not (0 < x_position < self.model.size):
+                        return False
+                    cell_ahead = (x_position, self.pos[1])
+                elif self.initial_direction == Direction.NORTH:
+                    y_position = self.pos[1] + self.length + free_space_ahead
+                    if not (0 < y_position < self.model.size):
+                        return False
+                    cell_ahead = (self.pos[0], y_position)
+                elif self.initial_direction == Direction.WEST:
+                    x_position = self.pos[0] - self.length - free_space_ahead
+                    if not (0 < x_position < self.model.size):
+                        return False
+                    cell_ahead = (x_position, self.pos[1])
+                elif self.initial_direction == Direction.SOUTH:
+                    y_position = self.pos[1] - self.length - free_space_ahead
+                    if not (0 < y_position < self.model.size):
+                        return False
+                    cell_ahead = (self.pos[0], y_position)
+        else:
+            return False
         # @todo introduce minimal_free_space_ahead?
         return free_space_ahead < 3
 
     # hoe werkt dit?
     def approaching_intersection(self, velocity, stop_distance):
-        if self.initial_direction == Direction.EAST:
+        if self.initial_direction == Direction.EAST and self.pos[0] < self.model.size // 2 - 10:
             if self.pos[0] + velocity + stop_distance >= self.model.size // 2 - 10:
                 return True
-        elif self.initial_direction == Direction.NORTH:
+        elif self.initial_direction == Direction.NORTH and self.pos[1] < self.model.size // 2 - 10:
             if self.pos[1] + velocity + stop_distance >= self.model.size // 2 - 10:
                 return True
-        elif self.initial_direction == Direction.WEST:
+        elif self.initial_direction == Direction.WEST and self.pos[0] > self.model.size // 2 + 8:
             if self.pos[0] - velocity - stop_distance <= self.model.size // 2 + 8:
                 return True
-        elif self.initial_direction == Direction.SOUTH:
+        elif self.initial_direction == Direction.SOUTH and self.pos[1] > self.model.size // 2 + 8:
             if self.pos[1] - velocity - stop_distance <= self.model.size // 2 + 8:
                 return True
 
@@ -168,26 +171,66 @@ class Car(Agent):
 
         return False
 
+    def intersection_move_ahead(self):
+        self.velocity += self.acceleration
+        if self.current_direction == Direction.EAST:
+           self.model.grid.move_agent(self, (self.pos[0] + self.velocity, self.pos[1]))
+        elif self.current_direction == Direction.NORTH:
+            self.model.grid.move_agent(self, (self.pos[0], self.pos[1] + self.velocity))
+        elif self.current_direction == Direction.WEST:
+            self.model.grid.move_agent(self, (self.pos[0] - self.velocity, self.pos[1]))
+        elif self.current_direction == Direction.SOUTH:
+            self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
 
+    def intersection_long_turn(self):
+        pass
+
+    def intersection_short_turn(self):
+        pass
+
+    def remove_car(self, agent):
+        self.model.grid.remove_agent(agent)
+        self.model.schedule.remove(agent)
 
     def move(self):
         self.update_velocity()
 
-        if self.velocity > 0:
-            if self.initial_direction == Direction.EAST:
-                self.model.grid.move_agent(self, (self.pos[0] + self.velocity, self.pos[1]))
-            elif self.initial_direction == Direction.NORTH:
-                self.model.grid.move_agent(self, (self.pos[0], self.pos[1] + self.velocity))
-            elif self.initial_direction == Direction.WEST:
-                self.model.grid.move_agent(self, (self.pos[0] - self.velocity, self.pos[1]))
-            elif self.initial_direction == Direction.SOUTH:
-                self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
-
-        elif self.velocity == 0:
+        if self.at_intersection() == False:
+            if self.current_direction == Direction.EAST:
+                if self.pos[0] + self.velocity >= self.model.size:
+                    self.remove_car(self)
+                else:
+                    self.model.grid.move_agent(self, (self.pos[0] + self.velocity, self.pos[1]))
+            elif self.current_direction == Direction.NORTH:
+                if self.pos[1] + self.velocity >= self.model.size:
+                    self.remove_car(self)
+                else:
+                    self.model.grid.move_agent(self, (self.pos[0], self.pos[1] + self.velocity))
+            elif self.current_direction == Direction.WEST:
+                if self.pos[0] - self.velocity < 0:
+                    self.remove_car(self)
+                else:
+                    self.model.grid.move_agent(self, (self.pos[0] - self.velocity, self.pos[1]))
+            elif self.current_direction == Direction.SOUTH:
+                if self.pos[1] - self.velocity < 0:
+                    self.remove_car(self)
+                else:
+                    self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
+        else:
+            print('test')
+            print(self.current_direction, self.next_direction)
             # set stop counter when car first arives at the stopline
-            if self.at_intersection() and self.stop_step == 0:
+            if self.velocity == 0 and self.stop_step == 0:
                 self.stop_step = self.model.schedule.steps
                 print(self.stop_step)
+            # if car goes straight ahead
+            if self.current_direction == self.next_direction:
+                self.intersection_move_ahead()
+            else:
+                pass
+
+
+
 
     def step(self):
         self.move()
