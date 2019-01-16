@@ -12,9 +12,7 @@ def agent_portrayal(agent):
         "Color": "#FFAAAA",
         "Filled": "true",
         "Layer": 2,
-        # "w": None,
-        # "h": None,
-        "scale": 20,
+        "scale": 15,
         "heading_x": 1,
         "heading_y": 0,
     }
@@ -22,14 +20,26 @@ def agent_portrayal(agent):
     if agent.current_direction == Direction.EAST:
         portrayal['heading_x'] = 1
         portrayal['heading_y'] = 0
+    elif agent.current_direction == Direction.SOUTH_EAST:
+        portrayal['heading_x'] = 1
+        portrayal['heading_y'] = -1
     elif agent.current_direction == Direction.SOUTH:
         portrayal['heading_x'] = 0
+        portrayal['heading_y'] = -1
+    elif agent.current_direction == Direction.SOUTH_WEST:
+        portrayal['heading_x'] = -1
         portrayal['heading_y'] = -1
     elif agent.current_direction == Direction.WEST:
         portrayal['heading_x'] = -1
         portrayal['heading_y'] = 0
+    elif agent.current_direction == Direction.NORTH_WEST:
+        portrayal['heading_x'] = -1
+        portrayal['heading_y'] = 1
     elif agent.current_direction == Direction.NORTH:
         portrayal['heading_x'] = 0
+        portrayal['heading_y'] = 1
+    elif agent.current_direction == Direction.NORTH_EAST:
+        portrayal['heading_x'] = 1
         portrayal['heading_y'] = 1
 
     # # @todo add goal maybe as a color; e.g. when the car wants to go left, color left side orange?
@@ -47,7 +57,7 @@ def agent_portrayal(agent):
 
 # size 216x216 is big enough to hold 10 cars per lane and the intersection
 size = 216
-grid = CanvasGrid(agent_portrayal, size, size, 4 * size, 4 * size)
+grid = CanvasGrid(agent_portrayal, size, size, 3 * size, 3 * size)
 
 chart_average_speed = ChartModule([
     {"Label": "Average speed", "Color": "#0000FF"}],
