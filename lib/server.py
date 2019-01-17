@@ -9,56 +9,43 @@ from lib.Direction import Direction
 
 def agent_portrayal(agent):
     portrayal = {
-        "Shape": "arrowHead",
-        "Color": "#FFAAAA",
-        "Filled": "true",
         "Layer": 100,
-        "scale": 15,
-        "heading_x": 1,
-        "heading_y": 0,
+        "scale": 7,
         "text": agent.id,
         "text_color": "#000000",
         "text-size": 15
     }
 
     if agent.current_direction == Direction.EAST:
-        portrayal['heading_x'] = 1
-        portrayal['heading_y'] = 0
+        current_direction = 'east'
     elif agent.current_direction == Direction.SOUTH_EAST:
-        portrayal['heading_x'] = 1
-        portrayal['heading_y'] = -1
+        current_direction = 'south_east'
     elif agent.current_direction == Direction.SOUTH:
-        portrayal['heading_x'] = 0
-        portrayal['heading_y'] = -1
+        current_direction = 'south'
     elif agent.current_direction == Direction.SOUTH_WEST:
-        portrayal['heading_x'] = -1
-        portrayal['heading_y'] = -1
+        current_direction = 'south_west'
     elif agent.current_direction == Direction.WEST:
-        portrayal['heading_x'] = -1
-        portrayal['heading_y'] = 0
+        current_direction = 'west'
     elif agent.current_direction == Direction.NORTH_WEST:
-        portrayal['heading_x'] = -1
-        portrayal['heading_y'] = 1
+        current_direction = 'north_west'
     elif agent.current_direction == Direction.NORTH:
-        portrayal['heading_x'] = 0
-        portrayal['heading_y'] = 1
-    elif agent.current_direction == Direction.NORTH_EAST:
-        portrayal['heading_x'] = 1
-        portrayal['heading_y'] = 1
+        current_direction = 'north'
+    else:
+        current_direction = 'north_east'
 
     # # @todo add goal maybe as a color; e.g. when the car wants to go left, color left side orange?
     if agent.next_direction == Direction.EAST:
-        portrayal['Color'] = '#03ff03'
+        next_direction = 'east'
     elif agent.next_direction == Direction.WEST:
-        portrayal['Color'] = '#ff0303'
+        next_direction = 'west'
     elif agent.next_direction == Direction.NORTH:
-        portrayal['Color'] = '#ffc105'
-    elif agent.next_direction == Direction.SOUTH:
-        portrayal['Color'] = '#8205ff'
+        next_direction = 'north'
+    else:
+        next_direction = 'south'
 
-    if agent.bmw_factor > 0.95:
-        portrayal['scale'] = 7
+    portrayal['Shape'] = 'assets/images/arrow_{}__{}.png'.format(next_direction, current_direction)
 
+    if agent.bmw_factor > 0.8:
         if agent.current_direction == Direction.EAST:
             portrayal['Shape'] = 'assets/images/bmw_arrow_east.png'
         elif agent.current_direction == Direction.SOUTH_EAST:
