@@ -166,14 +166,28 @@ class Car(Agent):
         self.velocity = new_velocity
 
     def at_intersection(self):
-        
-        return False
+        tl, br =  self.model.intersection_corners
+        tl_x = tl[0]
+        tl_y = tl[1]
+        br_x = br[0]
+        br_y = br[1]
+        if self.initial_direction == Direction.NORTH:
+            br_y -= 8
+        elif self.initial_direction == Direction.EAST:
+            br_x -= 8
+        elif self.initial_direction == Direction.SOUTH:
+            tl_y += 8
+        elif self.initial_direction == Direction.WEST:
+            tl_x += 8
+        print(br_y, self.pos[1], tl_y)
+        if tl_x < self.pos[0] < br_x and br_y < self.pos[1] < tl_y: 
+            return True
+        return self.at_stopline()
 
 
     def at_stopline(self):
         # for some reason, the stop position of the car is always 9 cells away from the actual stopline, thus:
         d = self.length + 1 # HARDCODED BADDD
-
         if self.current_direction == Direction.EAST and (self.pos[0] + d == self.road.stop_line_pos[0]):
             return True        
         elif self.current_direction == Direction.WEST and (self.pos[0] - d == self.road.stop_line_pos[0]):
@@ -227,7 +241,10 @@ class Car(Agent):
         y = self.pos[1]
 
         if self.current_direction == Direction.NORTH and self.next_direction == Direction.EAST:
-            y += 8
+            y += 14
+            self.current_direction = Direction.EAST
+        elif self.initial_direction == Direction.NORTH and self.current_direction == Direction.EAST:
+            x += 14
 
         self.model.grid.move_agent(self, (x, y))
 
@@ -272,7 +289,7 @@ class Car(Agent):
     def move(self):
         self.update_velocity()
 
-        if self.at_stopline() == False:
+        if self.at_intersection() == False:
             if self.current_direction == Direction.EAST:
                 if self.pos[0] + self.velocity >= self.model.size:
                     self.remove_car(self)
