@@ -126,6 +126,13 @@ class Car(Agent):
         brake_because_intersection = self.approaching_intersection(velocity, stop_distance)
         return brake_because_vehicle or brake_because_intersection
 
+    ''' ACCELERATE '''
+
+
+
+
+    ''' BRAKE '''
+
     # HELPERS
     def get_braking_speed(self, velocity):
         stop_distance = self.calculate_stop_distance(velocity)
@@ -158,10 +165,14 @@ class Car(Agent):
         # continue while accelerating
         self.velocity = new_velocity
 
+    def at_intersection(self):
+        
+        return False
+
 
     def at_stopline(self):
         # for some reason, the stop position of the car is always 9 cells away from the actual stopline, thus:
-        d = 9 # HARDCODED BADDD
+        d = self.length + 1 # HARDCODED BADDD
 
         if self.current_direction == Direction.EAST and (self.pos[0] + d == self.road.stop_line_pos[0]):
             return True        
@@ -212,7 +223,13 @@ class Car(Agent):
         pass
 
     def intersection_short_turn(self):
-        pass
+        x = self.pos[0]
+        y = self.pos[1]
+
+        if self.current_direction == Direction.NORTH and self.next_direction == Direction.EAST:
+            y += 8
+
+        self.model.grid.move_agent(self, (x, y))
 
     def remove_car(self, agent):
         self.model.grid.remove_agent(agent)
@@ -238,6 +255,18 @@ class Car(Agent):
 
         k = [(k, o[k]) for k in sorted(priority_queue, key=o.get)]
         return k
+
+    def go_direction(self):
+        # if car goes straight ahead
+        if self.current_direction == self.next_direction:
+            self.intersection_move_ahead()
+        # MAKE TURN LEFT OR RIGHT
+        else:
+            if self.long_turn():
+                self.intersection_long_turn()
+            elif self.short_turn():
+                self.intersection_short_turn()
+
 
 
     def move(self):
@@ -278,16 +307,7 @@ class Car(Agent):
                 if first == self:
 
 
-                    print(str(self), "IK MAG EERST")
-               
-                    # if car goes straight ahead
-                    if self.current_direction == self.next_direction:
-                        self.intersection_move_ahead()
-                    else:
-                        if self.long_turn():
-                            self.intersection_long_turn()
-                        elif self.short_turn():
-                            self.intersection_short_turn()
+                    self.go_direction()
 
 
 
