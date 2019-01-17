@@ -234,6 +234,16 @@ var GridVisualization = function(width, height, gridWidth, gridHeight, context, 
                     p3_y = cy;
                     p4_x = cx + arrowR;
                     p4_y = cy + arrowR;
+            } 
+            else {
+                p1_x = cx;
+                p1_y = cy - arrowR;
+                p2_x = cx - arrowR;
+                p2_y = cy + arrowR;
+                p3_x = cx;
+                p3_y = cy + 0.8*arrowR;
+                p4_x = cx + arrowR;
+                p4_y = cy + arrowR;
             }
 
             context.beginPath();
@@ -242,6 +252,19 @@ var GridVisualization = function(width, height, gridWidth, gridHeight, context, 
             context.lineTo(p3_x, p3_y);
             context.lineTo(p4_x, p4_y);
             context.closePath();
+
+            if (heading_x === (1) && heading_y === (-1)) { // south east
+                context.rotate(235 * Math.PI / 180);
+            }
+            else if (heading_x === (-1) && heading_y === (-1)) { // south west
+                    context.rotate(135 * Math.PI / 180);
+            }
+            else if (heading_x === (-1) && heading_y === 1) { // north west
+                    context.rotate(315 * Math.PI / 180);
+            }
+            else if (heading_x === (1) && heading_y === 0) { // north east
+                    context.rotate(45 * Math.PI / 180);
+            }
 
             context.strokeStyle = stroke_color;
             context.stroke();

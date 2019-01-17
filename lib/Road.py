@@ -1,5 +1,5 @@
 from lib.Car import Car
-from lib.direction import Direction
+from lib.Direction import Direction
 import random
 import numpy as np
 
