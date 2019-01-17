@@ -23,7 +23,28 @@ class Road:
         self.check_locations = self.calculate_locations()
         self.free_space = True
 
+        self.stop_line_pos = self.calculate_stop_line(1)
+
         self.p_next_directions = p_next_directions
+
+    # line_height is the height of the line (line width == lane_width)
+    def calculate_stop_line(self, line_height):
+        size = 216 # HARDCODED  != OK
+        lane_width = 8 # HARDCODED  != OK
+
+        x = self.start_location[0]
+        y = self.start_location[1]
+
+        if self.direction == Direction.NORTH:
+            y = y + size // 2 - lane_width - line_height
+        elif self.direction == Direction.SOUTH:
+            y = y - size //2 + lane_width + line_height
+        elif self.direction == Direction.WEST:
+            x = x - size // 2 + lane_width + line_height
+        elif self.direction == Direction.EAST:
+            x = x + size // 2 - lane_width - line_height
+
+        return x, y
 
     def spawn_car(self, unique_id):
         next_direction = np.random.choice(Direction, p=self.p_next_directions)
