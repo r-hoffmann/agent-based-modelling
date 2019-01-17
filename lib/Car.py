@@ -313,6 +313,7 @@ class Car(Agent):
                 else:
                     self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
         else:
+            print(self.id)
             # set stop counter when car first arives at the stopline
             if self.stop_step == 0:
                 self.stop_step = self.model.schedule.steps
@@ -326,6 +327,8 @@ class Car(Agent):
                     self.road.first = None
 
                     self.go_direction()
+            else:
+                self.go_direction()
 
 
 
