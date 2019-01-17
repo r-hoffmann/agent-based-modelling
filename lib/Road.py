@@ -38,7 +38,7 @@ class Road:
         if self.direction == Direction.NORTH:
             y = y + size // 2 - lane_width - line_height
         elif self.direction == Direction.SOUTH:
-            y = y - size //2 + lane_width + line_height
+            y = y - size // 2 + lane_width + line_height
         elif self.direction == Direction.WEST:
             x = x - size // 2 + lane_width + line_height
         elif self.direction == Direction.EAST:
