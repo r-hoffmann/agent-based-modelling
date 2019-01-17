@@ -4,7 +4,7 @@ from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule
 from lib.Intersection import Intersection
 from lib.Fourway import Fourway
-from lib.direction import Direction
+from lib.Direction import Direction
 
 
 def agent_portrayal(agent):

@@ -5,7 +5,7 @@ from mesa.datacollection import DataCollector
 from lib.Road import Road
 import matplotlib.pyplot as plt
 
-from lib.direction import Direction
+from lib.Direction import Direction
 
 
 class Intersection(Model):
