@@ -203,9 +203,28 @@ class Car(Agent):
 
         if self.current_direction == Direction.NORTH and self.next_direction == Direction.EAST:
             y += 14
-            self.current_direction = Direction.EAST
-        elif self.initial_direction == Direction.NORTH and self.current_direction == Direction.EAST:
+            self.current_direction = Direction.NORTH_EAST
+        elif self.initial_direction == Direction.NORTH and self.current_direction == Direction.NORTH_EAST:
             x += 14
+            self.current_direction = Direction.EAST
+        elif self.current_direction == Direction.EAST and self.next_direction == Direction.SOUTH:
+            x += 14
+            self.current_direction = Direction.SOUTH_EAST
+        elif self.initial_direction == Direction.EAST and self.current_direction == Direction.SOUTH_EAST:
+            y -= 14
+            self.current_direction = Direction.SOUTH
+        elif self.current_direction == Direction.SOUTH and self.next_direction == Direction.WEST:
+            y -= 14
+            self.current_direction = Direction.SOUTH_WEST
+        elif self.initial_direction == Direction.SOUTH and self.current_direction == Direction.SOUTH_WEST:
+            x -= 14
+            self.current_direction = Direction.WEST
+        elif self.current_direction == Direction.WEST and self.next_direction == Direction.NORTH:
+            x -= 14
+            self.current_direction = Direction.NORTH_WEST
+        elif self.initial_direction == Direction.WEST and self.current_direction == Direction.NORTH_WEST:
+            y += 14
+            self.current_direction = Direction.NORTH
 
         self.model.grid.move_agent(self, (x, y))
 
