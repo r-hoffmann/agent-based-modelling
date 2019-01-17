@@ -35,9 +35,9 @@ class Intersection(Model):
     def create_roads(self):
         self.roads.append(
             Road(
-                self, 
-                (112, 0), 
-                Direction.NORTH,
+                self,  
+                (103, 215), 
+                Direction.SOUTH,
                 self.p_car_spawn_north, 
                 [
                     self.p_north_to_east,
@@ -55,9 +55,9 @@ class Intersection(Model):
 
         self.roads.append(
             Road(
-                self, 
-                (215, 112), 
-                Direction.WEST,
+                self,  
+                (0, 103),
+                Direction.EAST,
                 self.p_car_spawn_west, 
                 [
                     self.p_west_to_east,
@@ -76,8 +76,8 @@ class Intersection(Model):
         self.roads.append(
             Road(
                 self,
-                (0, 103),
-                Direction.EAST,
+                (215, 112),
+                Direction.WEST,
                 self.p_car_spawn_east,
                 [
                     self.p_east_to_east,
@@ -96,8 +96,8 @@ class Intersection(Model):
         self.roads.append(
             Road(
                 self, 
-                (103, 215), 
-                Direction.SOUTH,
+                (112, 0),
+                Direction.NORTH,
                 self.p_car_spawn_south, 
                 [
                     self.p_south_to_east,
