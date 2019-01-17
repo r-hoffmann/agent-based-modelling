@@ -23,6 +23,8 @@ class Road:
         self.check_locations = self.calculate_locations()
         self.free_space = True
 
+        self.first = None
+
         self.stop_line_pos = self.calculate_stop_line(1)
 
         self.p_next_directions = p_next_directions
