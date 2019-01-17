@@ -1,5 +1,6 @@
 from mesa import Agent
 import math
+import numpy as np
 from lib.direction import Direction
 
 
@@ -20,6 +21,8 @@ class Car(Agent):
         """
         super().__init__(unique_id, model)
 
+        self.id = unique_id
+
         self.model = model
         self.road = road
         self.pos = location
@@ -36,6 +39,8 @@ class Car(Agent):
         self.bmw_factor = bmw_factor
         self.length = 8
         self.width = 4
+
+        self.priority_queue = 0
 
     def see(self, direction):
 
@@ -123,6 +128,13 @@ class Car(Agent):
         brake_because_intersection = self.approaching_intersection(velocity, stop_distance)
         return brake_because_vehicle or brake_because_intersection
 
+    ''' ACCELERATE '''
+
+
+
+
+    ''' BRAKE '''
+
     # HELPERS
     def get_braking_speed(self, velocity):
         stop_distance = self.calculate_stop_distance(velocity)
@@ -155,11 +167,29 @@ class Car(Agent):
         # continue while accelerating
         self.velocity = new_velocity
 
-
     def at_intersection(self):
-        # for some reason, the stop position of the car is always 9 cells away from the actual stopline, thus:
-        d = 9 # HARDCODED BADDD
+        tl, br =  self.model.intersection_corners
+        tl_x = tl[0]
+        tl_y = tl[1]
+        br_x = br[0]
+        br_y = br[1]
+        if self.initial_direction == Direction.NORTH:
+            br_y -= 8
+        elif self.initial_direction == Direction.EAST:
+            br_x -= 8
+        elif self.initial_direction == Direction.SOUTH:
+            tl_y += 8
+        elif self.initial_direction == Direction.WEST:
+            tl_x += 8
+        print(br_y, self.pos[1], tl_y)
+        if tl_x < self.pos[0] < br_x and br_y < self.pos[1] < tl_y: 
+            return True
+        return self.at_stopline()
 
+
+    def at_stopline(self):
+        # for some reason, the stop position of the car is always 9 cells away from the actual stopline, thus:
+        d = self.length + 1 # HARDCODED BADDD
         if self.current_direction == Direction.EAST and (self.pos[0] + d == self.road.stop_line_pos[0]):
             return True        
         elif self.current_direction == Direction.WEST and (self.pos[0] - d == self.road.stop_line_pos[0]):
@@ -209,11 +239,54 @@ class Car(Agent):
         pass
 
     def intersection_short_turn(self):
-        pass
+        x = self.pos[0]
+        y = self.pos[1]
+
+        if self.current_direction == Direction.NORTH and self.next_direction == Direction.EAST:
+            y += 14
+            self.current_direction = Direction.EAST
+        elif self.initial_direction == Direction.NORTH and self.current_direction == Direction.EAST:
+            x += 14
+
+        self.model.grid.move_agent(self, (x, y))
 
     def remove_car(self, agent):
         self.model.grid.remove_agent(agent)
         self.model.schedule.remove(agent)
+
+    def get_priority_queue(self):
+        first_cars = []
+
+        roads = self.model.roads
+
+        for r in roads:
+            first_cars.append(r.first)
+
+        priority_queue = {}
+
+        for fc in first_cars:
+            if fc:
+                priority_queue[fc] = fc.stop_step
+            else:
+                priority_queue[None] = np.inf
+
+        o = priority_queue
+
+        k = [(k, o[k]) for k in sorted(priority_queue, key=o.get)]
+        return k
+
+    def go_direction(self):
+        # if car goes straight ahead
+        if self.current_direction == self.next_direction:
+            self.intersection_move_ahead()
+        # MAKE TURN LEFT OR RIGHT
+        else:
+            if self.long_turn():
+                self.intersection_long_turn()
+            elif self.short_turn():
+                self.intersection_short_turn()
+
+
 
     def move(self):
         self.update_velocity()
@@ -240,18 +313,22 @@ class Car(Agent):
                 else:
                     self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
         else:
+            print(self.id)
             # set stop counter when car first arives at the stopline
-            if self.velocity == 0 and self.stop_step == 0:
+            if self.stop_step == 0:
                 self.stop_step = self.model.schedule.steps
-                print(self.stop_step)
-            # if car goes straight ahead
-            if self.current_direction == self.next_direction:
-                self.intersection_move_ahead()
+                self.road.first = self
+            # ik sta stil maar wacht minstens 1 tijdstap
+            elif self.road.first == self:
+                self.priority_queue = self.get_priority_queue()
+
+                first, _ = next(iter(self.priority_queue))
+                if first == self:
+                    self.road.first = None
+
+                    self.go_direction()
             else:
-                if self.long_turn():
-                    self.intersection_long_turn()
-                elif self.short_turn():
-                    self.intersection_short_turn()
+                self.go_direction()
 
 
 

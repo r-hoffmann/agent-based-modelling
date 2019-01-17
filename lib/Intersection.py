@@ -32,6 +32,27 @@ class Intersection(Model):
         self.throughput.collect(self)
         self.waiting_cars.collect(self)
 
+        self.intersection_corners = self.get_intersection_corners()
+
+
+    def get_intersection_corners(self):
+        lane_width = 8
+
+        mid_x = self.size // 2
+        mid_y = self.size // 2
+
+        tl_x = mid_x - lane_width
+        tl_y = mid_y + lane_width
+
+        br_x = mid_x + lane_width
+        br_y = mid_y - lane_width
+
+        points = []
+        points.append((tl_x, tl_y))
+        points.append((br_x, br_y))
+
+        return points
+
     def create_roads(self):
         self.roads.append(
             Road(
