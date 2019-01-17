@@ -21,6 +21,8 @@ class Car(Agent):
         """
         super().__init__(unique_id, model)
 
+        self.id = unique_id
+
         self.model = model
         self.road = road
         self.pos = location
@@ -312,7 +314,7 @@ class Car(Agent):
                     self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
         else:
             # set stop counter when car first arives at the stopline
-            if self.velocity == 0 and self.stop_step == 0:
+            if self.stop_step == 0:
                 self.stop_step = self.model.schedule.steps
                 self.road.first = self
             # ik sta stil maar wacht minstens 1 tijdstap
@@ -320,9 +322,8 @@ class Car(Agent):
                 self.priority_queue = self.get_priority_queue()
 
                 first, _ = next(iter(self.priority_queue))
-
                 if first == self:
-
+                    self.road.first = None
 
                     self.go_direction()
 
