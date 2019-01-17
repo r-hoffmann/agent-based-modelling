@@ -53,6 +53,26 @@ def agent_portrayal(agent):
     elif agent.next_direction == Direction.SOUTH:
         portrayal['Color'] = '#8205ff'
 
+    if agent.bmw_factor > 0.95:
+        portrayal['scale'] = 7
+
+        if agent.current_direction == Direction.EAST:
+            portrayal['Shape'] = 'assets/images/bmw_arrow_east.png'
+        elif agent.current_direction == Direction.SOUTH_EAST:
+            portrayal['Shape'] = 'assets/images/bmw_arrow_south_east.png'
+        elif agent.current_direction == Direction.SOUTH:
+            portrayal['Shape'] = 'assets/images/bmw_arrow_south.png'
+        elif agent.current_direction == Direction.SOUTH_WEST:
+            portrayal['Shape'] = 'assets/images/bmw_arrow_south_west.png'
+        elif agent.current_direction == Direction.WEST:
+            portrayal['Shape'] = 'assets/images/bmw_arrow_west.png'
+        elif agent.current_direction == Direction.NORTH_WEST:
+            portrayal['Shape'] = 'assets/images/bmw_arrow_north_west.png'
+        elif agent.current_direction == Direction.NORTH:
+            portrayal['Shape'] = 'assets/images/bmw_arrow_north.png'
+        elif agent.current_direction == Direction.NORTH_EAST:
+            portrayal['Shape'] = 'assets/images/bmw_arrow_north_east.png'
+
     return portrayal
 
 
