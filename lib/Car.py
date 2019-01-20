@@ -42,10 +42,11 @@ class Car(Agent):
         self.length = 8
         self.width = 4
         self.priority_queue = 0
+        self.following_vehicle = None
 
-    def calculate_stop_distance(self):
+    def calculate_stop_distance(self, velocity):
         # based on https://www.autoexamens.nl/remweg-berekenen/
-        return math.ceil(self.velocity / 10 * 3 + (self.velocity / 10) ** 2)
+        return math.ceil(velocity / 10 * 3 + (velocity / 10) ** 2)
 
     def approaching_another_vehicle(self, stop_distance):
         self.following_vehicle = None
@@ -85,8 +86,8 @@ class Car(Agent):
                     cell_ahead = (self.pos[0], y_position)
         else:
             return False
+
         self.following_vehicle = self.model.grid[cell_ahead[0]][cell_ahead[1]]
-        print(stop_distance)
         return free_space_ahead < stop_distance
 
     # hoe werkt dit?
@@ -106,9 +107,9 @@ class Car(Agent):
 
         return False
 
-    def should_brake(self):
+    def should_brake(self, velocity):
         # bad name for the function (unclear)
-        stop_distance = self.calculate_stop_distance()
+        stop_distance = self.calculate_stop_distance(velocity)
 
         # if nearing other vehicle
         brake_because_vehicle = self.approaching_another_vehicle(stop_distance)
@@ -118,12 +119,11 @@ class Car(Agent):
         return brake_because_vehicle or brake_because_intersection
 
     def should_accelerate(self):
-        under_max_road_speed = (self.velocity < self.road.max_speed)
-        return under_max_road_speed
+        return self.velocity < self.road.max_speed and not self.should_brake(min(self.velocity + self.acceleration, self.road.max_speed))
 
     # HELPERS
     def get_braking_speed(self):
-        stop_distance = self.calculate_stop_distance()
+        stop_distance = self.calculate_stop_distance(self.velocity)
         return int(self.velocity ** 2 / 2 * stop_distance)
 
     def at_intersection(self):
@@ -141,16 +141,15 @@ class Car(Agent):
         elif self.initial_direction == Direction.WEST:
             tl_x += 8
         print(br_y, self.pos[1], tl_y)
-        if tl_x < self.pos[0] < br_x and br_y < self.pos[1] < tl_y: 
+        if tl_x < self.pos[0] < br_x and br_y < self.pos[1] < tl_y:
             return True
         return self.at_stopline()
 
-
     def at_stopline(self):
         # for some reason, the stop position of the car is always 9 cells away from the actual stopline, thus:
-        d = self.length + 1 # HARDCODED BADDD
+        d = self.length + 1  # HARDCODED BADDD
         if self.current_direction == Direction.EAST and (self.pos[0] + d == self.road.stop_line_pos[0]):
-            return True        
+            return True
         elif self.current_direction == Direction.WEST and (self.pos[0] - d == self.road.stop_line_pos[0]):
             return True
         elif self.current_direction == Direction.NORTH and (self.pos[1] + d == self.road.stop_line_pos[1]):
@@ -163,7 +162,7 @@ class Car(Agent):
     def intersection_move_ahead(self):
         self.action.accelerate()
         if self.current_direction == Direction.EAST:
-           self.model.grid.move_agent(self, (self.pos[0] + self.velocity, self.pos[1]))
+            self.model.grid.move_agent(self, (self.pos[0] + self.velocity, self.pos[1]))
         elif self.current_direction == Direction.NORTH:
             self.model.grid.move_agent(self, (self.pos[0], self.pos[1] + self.velocity))
         elif self.current_direction == Direction.WEST:
@@ -264,22 +263,21 @@ class Car(Agent):
             elif self.short_turn():
                 self.intersection_short_turn()
 
-
-
     def move(self):
-        if self.should_brake():
+        if self.should_brake(self.velocity):
             goal_speed = 0
-            if self.following_vehicle != None:
+            if self.following_vehicle is not None:
                 if type(self.following_vehicle) == set:
                     self.following_vehicle = next(iter(self.following_vehicle))
                 goal_speed = self.following_vehicle.velocity
             self.action.brake(goal_speed)
-        elif self.should_accelerate():
+            return
+
+        if self.should_accelerate():
             self.action.accelerate()
 
         if self.at_intersection():
-            print(self.id)
-            # set stop counter when car first arives at the stopline
+            # set stop counter when car first arrives at the stopline
             if self.stop_step == 0:
                 self.stop_step = self.model.schedule.steps
                 self.road.first = self
@@ -314,6 +312,7 @@ class Car(Agent):
                 if self.pos[1] - self.velocity < 0:
                     self.remove_car(self)
                 else:
+                    self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
                     self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
 
     def step(self):
