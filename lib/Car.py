@@ -44,6 +44,10 @@ class Car(Agent):
         self.priority_queue = 0
         self.following_vehicle = None
 
+        # For long turn and u turn
+        self.turning = False
+        self.turn_step = 0
+
     def calculate_stop_distance(self, velocity):
         # based on https://www.autoexamens.nl/remweg-berekenen/
         return math.ceil(velocity / 10 * 3 + (velocity / 10) ** 2)
@@ -140,7 +144,7 @@ class Car(Agent):
             tl_y += 8
         elif self.initial_direction == Direction.WEST:
             tl_x += 8
-        print(br_y, self.pos[1], tl_y)
+
         if tl_x < self.pos[0] < br_x and br_y < self.pos[1] < tl_y:
             return True
         return self.at_stopline()
@@ -170,6 +174,9 @@ class Car(Agent):
         elif self.current_direction == Direction.SOUTH:
             self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
 
+    def u_turn(self):
+        return (int(self.initial_direction) + 4) % 8 == int(self.next_direction)
+
     def long_turn(self):
         # Checks if a car will make a long turn at a intersection
         if self.initial_direction == Direction.NORTH and self.next_direction == Direction.WEST:
@@ -194,7 +201,74 @@ class Car(Agent):
         return False
 
     def intersection_long_turn(self):
-        pass
+        self.turning = True
+
+        if self.turn_step == 0:
+            self.intersection_step_direction(direction=self.current_direction)
+        elif self.turn_step == 1:
+            self.intersection_step_direction(self.current_direction)
+            self.intersection_step_turn(turn_left=True)
+        else:
+            next_direction = (int(self.current_direction) + 2) % 8
+            if next_direction % 2 != 0:
+                next_direction -= 1
+
+            self.intersection_step_direction(direction=Direction(next_direction))
+            self.intersection_step_turn(turn_left=True)
+            self.turning = False
+            self.turn_step = 0
+            return
+
+        self.turn_step += 1
+
+    def intersection_u_turn(self):
+        self.turning = True
+
+        if self.turn_step == 0:
+            self.intersection_step_direction(direction=self.current_direction)
+        elif self.turn_step == 1:
+            self.intersection_step_direction(direction=self.current_direction)
+            self.intersection_step_turn(turn_left=True)
+        elif self.turn_step == 2:
+            next_direction = (int(self.current_direction) + 2) % 8
+            if next_direction % 2 != 0:
+                next_direction -= 1
+
+            self.intersection_step_direction(direction=Direction(next_direction))
+            self.intersection_step_turn(turn_left=True)
+            self.intersection_step_turn(turn_left=True)
+        else:
+            next_direction = (int(self.current_direction) + 2) % 8
+            if next_direction % 2 != 0:
+                next_direction -= 1
+
+            self.intersection_step_direction(direction=Direction(next_direction))
+            self.intersection_step_turn(turn_left=True)
+            self.turning = False
+            self.turn_step = 0
+            return
+
+        self.turn_step += 1
+
+    def intersection_step_direction(self, direction):
+        step_size = 13
+        if self.turn_step > 0:
+            step_size = 8
+
+        if direction == Direction.EAST:
+            self.model.grid.move_agent(self, (self.pos[0] + step_size, self.pos[1]))
+        elif direction == Direction.NORTH:
+            self.model.grid.move_agent(self, (self.pos[0], self.pos[1] + step_size))
+        elif direction == Direction.WEST:
+            self.model.grid.move_agent(self, (self.pos[0] - step_size, self.pos[1]))
+        elif direction == Direction.SOUTH:
+            self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - step_size))
+
+    def intersection_step_turn(self, turn_left):
+        if turn_left:
+            self.current_direction = Direction((int(self.current_direction) + 1) % 8)
+        else:
+            self.current_direction = Direction((int(self.current_direction) - 1) % 8)
 
     def intersection_short_turn(self):
         x = self.pos[0]
@@ -262,6 +336,8 @@ class Car(Agent):
                 self.intersection_long_turn()
             elif self.short_turn():
                 self.intersection_short_turn()
+            elif self.u_turn():
+                self.intersection_u_turn()
 
     def move(self):
         if self.should_brake(self.velocity):
@@ -274,7 +350,9 @@ class Car(Agent):
         elif self.should_accelerate():
             self.action.accelerate()
 
-        if self.at_intersection():
+        if self.turning:
+            self.go_direction()
+        elif self.at_intersection():
             # set stop counter when car first arrives at the stopline
             if self.stop_step == 0:
                 self.stop_step = self.model.schedule.steps
