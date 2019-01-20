@@ -271,9 +271,7 @@ class Car(Agent):
                     self.following_vehicle = next(iter(self.following_vehicle))
                 goal_speed = self.following_vehicle.velocity
             self.action.brake(goal_speed)
-            return
-
-        if self.should_accelerate():
+        elif self.should_accelerate():
             self.action.accelerate()
 
         if self.at_intersection():
@@ -312,7 +310,6 @@ class Car(Agent):
                 if self.pos[1] - self.velocity < 0:
                     self.remove_car(self)
                 else:
-                    self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
                     self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
 
     def step(self):
