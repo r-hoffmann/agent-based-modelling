@@ -62,13 +62,9 @@ class Intersection(Model):
                 self.p_car_spawn_north, 
                 [
                     self.p_north_to_east,
-                    0,
                     self.p_north_to_north,
-                    0,
                     self.p_north_to_west,
-                    0,
                     self.p_north_to_south,
-                    0
                 ], 
                 self.max_speed_vertical
             )
@@ -82,13 +78,9 @@ class Intersection(Model):
                 self.p_car_spawn_west, 
                 [
                     self.p_west_to_east,
-                    0,
                     self.p_west_to_north,
-                    0,
                     self.p_west_to_west,
-                    0,
                     self.p_west_to_south,
-                    0
                 ], 
                 self.max_speed_horizontal
             )
@@ -102,13 +94,9 @@ class Intersection(Model):
                 self.p_car_spawn_east,
                 [
                     self.p_east_to_east,
-                    0,
                     self.p_east_to_north,
-                    0,
                     self.p_east_to_west,
-                    0,
                     self.p_east_to_south,
-                    0
                 ],
                 self.max_speed_horizontal
             )
@@ -122,13 +110,9 @@ class Intersection(Model):
                 self.p_car_spawn_south, 
                 [
                     self.p_south_to_east,
-                    0,
                     self.p_south_to_north,
-                    0,
                     self.p_south_to_west,
-                    0,
                     self.p_south_to_south,
-                    0
                 ], 
                 self.max_speed_vertical
             )

@@ -49,7 +49,7 @@ class Road:
         return x, y
 
     def spawn_car(self, unique_id):
-        next_direction = np.random.choice(Direction, p=self.p_next_directions)
+        next_direction = np.random.choice([Direction.EAST, Direction.NORTH, Direction.WEST, Direction.SOUTH], p=self.p_next_directions)
 
         # TODO: Add different velocities by increasing the sigma
         velocity = int(random.gauss(self.max_speed, 0))
