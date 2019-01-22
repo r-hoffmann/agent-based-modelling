@@ -216,3 +216,31 @@ class Intersection(Model):
 
     def get_number_of_locked_sections(self):
         return sum([1 for s in self.is_locked_section if self.is_locked_section[s]])
+
+
+# model = Intersection(
+#     max_speed_horizontal=10,
+#     max_speed_vertical=10,
+#     a_factor=.05,
+#     p_car_spawn_north=0.5,
+#     p_north_to_north=0.10,
+#     p_north_to_west=0.24,
+#     p_north_to_east=0.33,
+#     p_north_to_south=0.33,
+#     p_car_spawn_west=0.0,
+#     p_west_to_north=0.0,
+#     p_west_to_west=1.0,
+#     p_west_to_east=0.0,
+#     p_west_to_south=0.0,
+#     p_car_spawn_east=0.0,
+#     p_east_to_north=0.0,
+#     p_east_to_west=0.0,
+#     p_east_to_east=1.0,
+#     p_east_to_south=0.0,
+#     p_car_spawn_south=0.0,
+#     p_south_to_north=0.0,
+#     p_south_to_west=0.0,
+#     p_south_to_east=0.0,
+#     p_south_to_south=1.0,
+# )
+# model.run_model(100)
