@@ -5,6 +5,15 @@ from lib.Direction import Direction
 from lib.Turn import Turn
 from lib.Action import Action
 
+SECTIONS_TO_LOCK = dict()
+
+SECTIONS_TO_LOCK[Direction.NORTH] = [Direction.SOUTH_EAST, Direction.NORTH_EAST, Direction.NORTH_WEST, Direction.SOUTH_WEST]
+
+SECTIONS_TO_LOCK[Direction.WEST] = [Direction.NORTH_EAST, Direction.NORTH_WEST, Direction.SOUTH_WEST, Direction.SOUTH_EAST]
+
+SECTIONS_TO_LOCK[Direction.EAST] = [Direction.SOUTH_WEST, Direction.SOUTH_EAST, Direction.NORTH_EAST, Direction.NORTH_WEST]
+
+SECTIONS_TO_LOCK[Direction.SOUTH] = [Direction.NORTH_WEST, Direction.SOUTH_WEST, Direction.SOUTH_EAST, Direction.NORTH_EAST]
 
 class Car(Agent):
     def __init__(self, unique_id, model, road, location, initial_direction, next_direction, velocity, acceleration, bmw_factor, start_step):
@@ -211,14 +220,18 @@ class Car(Agent):
 
     ''' Directions a car can move to at the intersection ''' 
     def move(self):
-        if self.current_direction == self.next_direction:
+        if not self.turning:
             self.intersection_move_ahead()
-        elif self.turn_type == Turn.LONG:
-            self.intersection_long_turn()
-        elif self.turn_type == Turn.U:
-            self.intersection_u_turn()
-        elif self.turn_type == Turn.SHORT:
-            self.intersection_short_turn()
+        else:
+            if self.turn_type == Turn.STRAIGHT:
+                self.intersection_straight()
+            elif self.turn_type == Turn.LONG:
+                self.intersection_long_turn()
+            elif self.turn_type == Turn.U:
+                self.intersection_u_turn()
+            elif self.turn_type == Turn.SHORT:
+                self.intersection_short_turn()
+            self.turn_step += 1
 
     # Move straight ahead
     def intersection_move_ahead(self):
@@ -232,90 +245,66 @@ class Car(Agent):
         elif self.current_direction == Direction.SOUTH:
             self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
 
+    def turn_finished(self):
+        self.turning = False
+        self.model.unlock_section(SECTIONS_TO_LOCK[self.initial_direction][self.turn_type - 1], self)
+        self.move()
+        self.turn_step = 0
+
     # Take a short turn
     def intersection_short_turn(self):
-        x = self.pos[0]
-        y = self.pos[1]
+        if self.turn_step == 0:
+            self.lock_turn()
+            self.intersection_step_direction(direction=self.current_direction)
+            self.intersection_step_turn(turn_left=False)
+        else:
+            self.intersection_step_turn(turn_left=False)
+            self.turn_finished()
 
-        if self.current_direction == Direction.NORTH and self.next_direction == Direction.EAST:
-            y += 14
-            self.current_direction = Direction.NORTH_EAST
-        elif self.initial_direction == Direction.NORTH and self.current_direction == Direction.NORTH_EAST:
-            x += 14
-            self.current_direction = Direction.EAST
-        elif self.current_direction == Direction.EAST and self.next_direction == Direction.SOUTH:
-            x += 14
-            self.current_direction = Direction.SOUTH_EAST
-        elif self.initial_direction == Direction.EAST and self.current_direction == Direction.SOUTH_EAST:
-            y -= 14
-            self.current_direction = Direction.SOUTH
-        elif self.current_direction == Direction.SOUTH and self.next_direction == Direction.WEST:
-            y -= 14
-            self.current_direction = Direction.SOUTH_WEST
-        elif self.initial_direction == Direction.SOUTH and self.current_direction == Direction.SOUTH_WEST:
-            x -= 14
-            self.current_direction = Direction.WEST
-        elif self.current_direction == Direction.WEST and self.next_direction == Direction.NORTH:
-            x -= 14
-            self.current_direction = Direction.NORTH_WEST
-        elif self.initial_direction == Direction.WEST and self.current_direction == Direction.NORTH_WEST:
-            y += 14
-            self.current_direction = Direction.NORTH
+    def intersection_straight(self):
+        if self.turn_step in [0, 1]:
+            self.lock_turn()
+            self.intersection_step_direction(direction=self.current_direction)
+        else:
+            self.turn_finished()
 
-        self.model.grid.move_agent(self, (x, y))
 
     # Take a long turn
     def intersection_long_turn(self):
-        self.turning = True
-
         if self.turn_step == 0:
+            self.lock_turn()
             self.intersection_step_direction(direction=self.current_direction)
         elif self.turn_step == 1:
+            self.lock_turn()
             self.intersection_step_direction(self.current_direction)
             self.intersection_step_turn(turn_left=True)
-        else:
-            next_direction = (int(self.current_direction) + 2) % 8
-            if next_direction % 2 != 0:
-                next_direction -= 1
-
-            self.intersection_step_direction(direction=Direction(next_direction))
+        elif self.turn_step == 2:
+            self.lock_turn()
             self.intersection_step_turn(turn_left=True)
-            self.turning = False
-            self.turn_step = 0
-            return
-
-        self.turn_step += 1
+            self.intersection_step_direction(self.current_direction)
+        else:
+            self.turn_finished()
 
     # Take a u turn
     def intersection_u_turn(self):
-        print("K")
-        self.turning = True
-
         if self.turn_step == 0:
+            self.lock_turn()
             self.intersection_step_direction(direction=self.current_direction)
         elif self.turn_step == 1:
+            self.lock_turn()
             self.intersection_step_direction(direction=self.current_direction)
             self.intersection_step_turn(turn_left=True)
         elif self.turn_step == 2:
-            next_direction = (int(self.current_direction) + 2) % 8
-            if next_direction % 2 != 0:
-                next_direction -= 1
-
-            self.intersection_step_direction(direction=Direction(next_direction))
+            self.lock_turn()
             self.intersection_step_turn(turn_left=True)
+            self.intersection_step_direction(direction=self.current_direction)
             self.intersection_step_turn(turn_left=True)
+        elif self.turn_step == 3:
+            self.lock_turn()
+            self.intersection_step_turn(turn_left=True)
+            self.intersection_step_direction(direction=self.current_direction)
         else:
-            next_direction = (int(self.current_direction) + 2) % 8
-            if next_direction % 2 != 0:
-                next_direction -= 1
-
-            self.intersection_step_direction(direction=Direction(next_direction))
-            self.intersection_step_turn(turn_left=True)
-            self.turning = False
-            self.turn_step = 0
-            return
-
-        self.turn_step += 1
+            self.turn_finished()
 
     # Helpers:
     def intersection_step_direction(self, direction):
@@ -338,8 +327,20 @@ class Car(Agent):
         else:
             self.current_direction = Direction((int(self.current_direction) - 1) % 8)
 
+    def lock_turn(self):
+        sections_to_lock = SECTIONS_TO_LOCK[self.initial_direction][self.turn_step:self.turn_type]
+        print(sections_to_lock)
+        self.model.lock_sections(sections_to_lock, self)
+        if self.turn_step > 0:
+            unlock_section = SECTIONS_TO_LOCK[self.initial_direction][self.turn_step - 1]
+            self.model.unlock_section(unlock_section, self)
+
+    def can_turn(self):
+        turn = SECTIONS_TO_LOCK[self.initial_direction][:self.turn_type]
+        return not self.model.turn_is_locked(turn)
+
     ''' Framework functions '''
-    def step(self):
+    def advance(self):
         if self.should_brake(self.velocity):
             goal_speed = 0
             if self.following_vehicle is not None:
@@ -358,15 +359,16 @@ class Car(Agent):
                 self.stop_step = self.model.schedule.steps
                 self.road.first = self
             # ik sta stil maar wacht minstens 1 tijdstap
-            elif self.road.first == self:
+            elif self.road.first == self and self.can_turn():
                 self.priority_queue = self.get_priority_queue()
 
                 first, _ = next(iter(self.priority_queue))
                 if first == self:
+                    self.turning = True
                     self.road.first = None
                     self.move()
-            else:
-                self.move()
+            # else:
+            #     self.move()
         else:
             if self.current_direction == Direction.EAST:
                 if self.pos[0] + self.velocity >= self.model.size:
@@ -392,3 +394,9 @@ class Car(Agent):
     def remove_car(self, agent):
         self.model.grid.remove_agent(agent)
         self.model.schedule.remove(agent)
+
+    def __repr__(self):
+        return str(self.id)
+
+    def __str__(self):
+        return self.__repr__()

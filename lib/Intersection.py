@@ -1,6 +1,6 @@
 from mesa import Model
 from mesa.space import MultiGrid
-from mesa.time import BaseScheduler
+from mesa.time import SimultaneousActivation
 from mesa.datacollection import DataCollector
 from lib.Road import Road
 import matplotlib.pyplot as plt
@@ -19,22 +19,60 @@ class Intersection(Model):
         self.create_roads()
         self.cars = []
 
+        self.is_locked_section = {
+            Direction.NORTH_WEST: False,
+            Direction.NORTH_EAST: False,
+            Direction.SOUTH_WEST: False,
+            Direction.SOUTH_EAST: False
+        }
+
+        self.locked_by = {
+            Direction.NORTH_WEST: None,
+            Direction.NORTH_EAST: None,
+            Direction.SOUTH_WEST: None,
+            Direction.SOUTH_EAST: None
+        }
+
         # size 216x216 is big enough to hold 10 cars per lane and the intersection
         self.size = 216
         self.grid = MultiGrid(self.size, self.size, True)
-        self.schedule = BaseScheduler(self)
+        self.schedule = SimultaneousActivation(self)
         self.average_speed = DataCollector({"Average speed": lambda m: self.get_average_speed()})
         self.throughput = DataCollector({"Throughput": lambda m: self.get_throughput()})
         self.waiting_cars = DataCollector({"Number of waiting cars": lambda m: self.get_waiting_cars()})
+        self.number_of_locked_sections = DataCollector({"Number of locked sections": lambda m: self.get_number_of_locked_sections()})
 
         self.running = True
         self.average_speed.collect(self)
         self.throughput.collect(self)
         self.waiting_cars.collect(self)
+        self.number_of_locked_sections.collect(self)
 
         self.intersection_corners = self.get_intersection_corners()
 
 
+    def section_is_locked(self, direction):
+        return self.is_locked_section[direction]
+
+    def turn_is_locked(self, directions):
+        for direction in directions:
+            if self.section_is_locked(direction):
+                return True
+        return False
+
+    def lock_sections(self, directions, car):
+        for direction in directions:
+            if not self.locked_by[direction] in [None, car]:
+                raise Exception('Car tries to lock section which is not his. {} != {}'.format(self.locked_by[direction], car))
+            self.is_locked_section[direction] = True
+            self.locked_by[direction] = car
+
+    def unlock_section(self, direction, car):
+        if self.locked_by[direction] == car:
+            self.is_locked_section[direction] = False
+            self.locked_by[direction] = None
+        else:
+            raise Exception('Car tries to unlock section which is not his. {} != {}'.format(self.locked_by[direction], car))
     def get_intersection_corners(self):
         lane_width = 8
 
@@ -133,6 +171,7 @@ class Intersection(Model):
         self.average_speed.collect(self)
         self.throughput.collect(self)
         self.waiting_cars.collect(self)
+        self.number_of_locked_sections.collect(self)
 
     def run_model(self, n=100):
         for _ in range(n):
@@ -150,3 +189,5 @@ class Intersection(Model):
     def get_waiting_cars(self):
         return sum([1 for agent in self.schedule.agents if agent.velocity==0])
 
+    def get_number_of_locked_sections(self):
+        return sum([1 for s in self.is_locked_section if self.is_locked_section[s]])

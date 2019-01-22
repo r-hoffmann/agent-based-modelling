@@ -89,6 +89,11 @@ chart_waiting_cars = ChartModule([
     data_collector_name='waiting_cars'
 )
 
+chart_locked_sections = ChartModule([
+    {"Label": "Number of locked sections", "Color": "#00FFFF"}],
+    data_collector_name='number_of_locked_sections'
+)
+
 model_params = {
     "general": UserSettableParameter('static_text', value="General"),
     "max_speed_horizontal": UserSettableParameter('slider', "Max speed horizontal road", 10, 10, 30, 1),
@@ -126,5 +131,5 @@ for local_include in Fourway().local_includes:
 
 ChartModule.local_includes.append('assets/js/visualisation_extra.js')
 
-server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_waiting_cars],
+server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_waiting_cars, chart_locked_sections],
                        "Fourway Model", model_params)
