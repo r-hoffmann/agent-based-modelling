@@ -4,6 +4,7 @@ from mesa.time import BaseScheduler
 from mesa.datacollection import DataCollector
 from lib.Road import Road
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from lib.Direction import Direction
 
@@ -131,12 +132,20 @@ class Intersection(Model):
 
         # Save the statistics
         self.average_speed.collect(self)
+        df1 = self.average_speed.get_model_vars_dataframe()
         self.throughput.collect(self)
+        df2 = self.throughput.get_model_vars_dataframe()
         self.waiting_cars.collect(self)
+        df3 = self.waiting_cars.get_model_vars_dataframe()
+        df = pd.DataFrame([df1.iloc[:,0], df2.iloc[:,0], df3.iloc[:,0]])
+        df = df.transpose()
+        df.to_csv('test.csv')
+
 
     def run_model(self, n=100):
         for _ in range(n):
             self.step()
+
 
     def get_average_speed(self):
         number_of_agents = len(self.schedule.agents)
