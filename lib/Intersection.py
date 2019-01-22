@@ -37,7 +37,7 @@ class Intersection(Model):
 
         self.intersection_corners = self.get_intersection_corners()
 
-        
+        self.priority_queue = None
 
 
     def get_intersection_corners(self):
@@ -139,7 +139,6 @@ class Intersection(Model):
         self.schedule.step()
 
         self.update_priority_queue()
-        print(self.priority_queue)
 
         # Save the statistics
         self.average_speed.collect(self)
@@ -152,6 +151,29 @@ class Intersection(Model):
         df = df.transpose()
         df.to_csv('test.csv')
 
+
+    def update_priority_queue(self):
+        priority_queue = {}
+        for road in self.roads:
+            if road.first:
+                priority_queue[road.first] = road.first.stop_step
+
+        self.priority_queue = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]     
+
+        print(self.priority_queue)
+
+    # def update_priority_queues(self):
+    #     priority_queue = {}
+
+    #     # build priority queue
+    #     for road in self.roads:
+    #         if road.first:
+    #             priority_queue[road.first] = road.first.stop_step
+
+    #     # set priority queues            
+    #     for road in self.roads:
+    #         if road.first:
+    #             road.first.priority_queue = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]        
 
     def run_model(self, n=100):
         for _ in range(n):
