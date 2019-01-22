@@ -39,7 +39,6 @@ class Car(Agent):
         self.bmw_factor = bmw_factor
         self.length = 8
         self.width = 4
-        self.priority_queue = 0
         self.following_vehicle = None
 
         # For long turn and u turn
@@ -48,23 +47,25 @@ class Car(Agent):
 
         self.turn_type = self.get_turn_type()
 
+        self.wait_counter = 0
+
     ''' Getters '''   
-    # Builds the priority queue for every first car in line to determine which car should go first
-    # @TODO: add BMW factor into decision making 
-    def get_priority_queue(self):
-        first_cars = []
-        for r in self.model.roads:
-            first_cars.append(r.first)
+    # # Builds the priority queue for every first car in line to determine which car should go first
+    # # @TODO: add BMW factor into decision making 
+    # def get_priority_queue(self):
+    #     first_cars = []
+    #     for r in self.model.roads:
+    #         first_cars.append(r.first)
 
-        priority_queue = {}
-        for fc in first_cars:
-            if fc:
-                priority_queue[fc] = fc.stop_step
-            else:
-                priority_queue[None] = np.inf
+    #     priority_queue = {}
+    #     for fc in first_cars:
+    #         if fc:
+    #             priority_queue[fc] = fc.stop_step
+    #         else:
+    #             priority_queue[None] = np.inf
 
-        k = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]
-        return k
+    #     k = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]
+    #     return k
 
     # Defines the type of turn a car is going to make at the intersection
     def get_turn_type(self):   
@@ -288,7 +289,6 @@ class Car(Agent):
 
     # Take a u turn
     def intersection_u_turn(self):
-        print("K")
         self.turning = True
 
         if self.turn_step == 0:
@@ -338,8 +338,17 @@ class Car(Agent):
         else:
             self.current_direction = Direction((int(self.current_direction) - 1) % 8)
 
+    def wait(self, steps):
+        self.wait_counter += steps
+
+
+        if self.wait_counter > 0:
+            self.wait_counter -= 1
+        
+
+
     ''' Framework functions '''
-    def step(self):
+    def advance(self):
         if self.should_brake(self.velocity):
             goal_speed = 0
             if self.following_vehicle is not None:
@@ -359,12 +368,13 @@ class Car(Agent):
                 self.road.first = self
             # ik sta stil maar wacht minstens 1 tijdstap
             elif self.road.first == self:
-                self.priority_queue = self.get_priority_queue()
+                first, _ = next(iter(self.model.priority_queue))
 
-                first, _ = next(iter(self.priority_queue))
+                # Car can move
                 if first == self:
                     self.road.first = None
                     self.move()
+            # while at intersection
             else:
                 self.move()
         else:

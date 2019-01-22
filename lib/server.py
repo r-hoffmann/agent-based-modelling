@@ -45,7 +45,7 @@ def agent_portrayal(agent):
 
     portrayal['Shape'] = 'assets/images/arrow_{}__{}.png'.format(next_direction, current_direction)
 
-    if agent.bmw_factor > 0.8:
+    if agent.bmw_factor > 0.7:
         if agent.current_direction == Direction.EAST:
             portrayal['Shape'] = 'assets/images/bmw_arrow_east.png'
         elif agent.current_direction == Direction.SOUTH_EAST:
@@ -91,29 +91,30 @@ chart_waiting_cars = ChartModule([
 
 model_params = {
     "general": UserSettableParameter('static_text', value="General"),
-    "max_speed_horizontal": UserSettableParameter('slider', "Max speed horizontal road", 10, 10, 30, 1),
-    "max_speed_vertical": UserSettableParameter('slider', "Max speed vertical road", 10, 0, 30, 1),
-    "a_factor": UserSettableParameter('slider', "Antisocial factor mean", .05, 0, 1, .01),
+    "max_speed_horizontal": UserSettableParameter('slider', "Max speed horizontal road", 10, 5, 15, 1),
+    "max_speed_vertical": UserSettableParameter('slider', "Max speed vertical road", 10, 5, 15, 1),
+    "alpha_factor": UserSettableParameter('slider', "Antisocial alpha factor", 2, 0, 10, .01),
+    "beta_factor": UserSettableParameter('slider', "Antisocial beta factor", 5, 0, 10, .01),
     "north": UserSettableParameter('static_text', value="From North"),
-    "p_car_spawn_north": UserSettableParameter('slider', "Spawn Probability", 0.5, 0, 1, 0.01),
+    "p_car_spawn_north": UserSettableParameter('slider', "Spawn Probability", 1, 0, 1, 0.01),
     "p_north_to_north": UserSettableParameter('slider', 'To North', 0.10, 0, 1, 0.01),
     "p_north_to_west": UserSettableParameter('slider', 'To West', 0.24, 0, 1, 0.01),
     "p_north_to_east": UserSettableParameter('slider', 'To East', 0.33, 0, 1, 0.01),
     "p_north_to_south": UserSettableParameter('slider', 'To South', 0.33, 0, 1, 0.01),
     "west": UserSettableParameter('static_text', value="From West"),
-    "p_car_spawn_west": UserSettableParameter('slider', "Spawn Probability", 0.0, 0, 1, 0.01),
+    "p_car_spawn_west": UserSettableParameter('slider', "Spawn Probability", 0, 0, 1, 0.01),
     "p_west_to_north": UserSettableParameter('slider', 'To North', 0.0, 0, 1, 0.01),
     "p_west_to_west": UserSettableParameter('slider', 'To West', 1.0, 0, 1, 0.01),
     "p_west_to_east": UserSettableParameter('slider', 'To East', 0.0, 0, 1, 0.01),
     "p_west_to_south": UserSettableParameter('slider', 'To South', 0.0, 0, 1, 0.01),
     "east": UserSettableParameter('static_text', value="From East"),
-    "p_car_spawn_east": UserSettableParameter('slider', "Spawn Probability", 0.0, 0, 1, 0.01),
+    "p_car_spawn_east": UserSettableParameter('slider', "Spawn Probability", 0, 0, 1, 0.01),
     "p_east_to_north": UserSettableParameter('slider', 'To North', 0.0, 0, 1, 0.01),
     "p_east_to_west": UserSettableParameter('slider', 'To West', 0.0, 0, 1, 0.01),
     "p_east_to_east": UserSettableParameter('slider', 'To East', 1.0, 0, 1, 0.01),
     "p_east_to_south": UserSettableParameter('slider', 'To South', 0.0, 0, 1, 0.01),
     "south": UserSettableParameter('static_text', value="From South"),
-    "p_car_spawn_south": UserSettableParameter('slider', "Spawn Probability", 0.0, 0, 1, 0.01),
+    "p_car_spawn_south": UserSettableParameter('slider', "Spawn Probability", 1, 0, 1, 0.01),
     "p_south_to_north": UserSettableParameter('slider', 'To North', 0.0, 0, 1, 0.01),
     "p_south_to_west": UserSettableParameter('slider', 'To West', 0.0, 0, 1, 0.01),
     "p_south_to_east": UserSettableParameter('slider', 'To East', 0.0, 0, 1, 0.01),

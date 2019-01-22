@@ -1,6 +1,6 @@
 from mesa import Model
 from mesa.space import MultiGrid
-from mesa.time import BaseScheduler
+from mesa.time import SimultaneousActivation
 from mesa.datacollection import DataCollector
 from lib.Road import Road
 import matplotlib.pyplot as plt
@@ -22,7 +22,7 @@ class Intersection(Model):
         # size 216x216 is big enough to hold 10 cars per lane and the intersection
         self.size = 216
         self.grid = MultiGrid(self.size, self.size, True)
-        self.schedule = BaseScheduler(self)
+        self.schedule = SimultaneousActivation(self)
         self.average_speed = DataCollector({"Average speed": lambda m: self.get_average_speed()})
         self.throughput = DataCollector({"Throughput": lambda m: self.get_throughput()})
         self.waiting_cars = DataCollector({"Number of waiting cars": lambda m: self.get_waiting_cars()})
@@ -33,6 +33,8 @@ class Intersection(Model):
         self.waiting_cars.collect(self)
 
         self.intersection_corners = self.get_intersection_corners()
+
+        self.priority_queue = None
 
 
     def get_intersection_corners(self):
@@ -66,7 +68,8 @@ class Intersection(Model):
                     self.p_north_to_west,
                     self.p_north_to_south,
                 ], 
-                self.max_speed_vertical
+                self.max_speed_vertical,
+                (self.alpha_factor, self.beta_factor)
             )
         )
 
@@ -82,7 +85,8 @@ class Intersection(Model):
                     self.p_west_to_west,
                     self.p_west_to_south,
                 ], 
-                self.max_speed_horizontal
+                self.max_speed_horizontal,
+                (self.alpha_factor, self.beta_factor)
             )
         )
         
@@ -98,7 +102,8 @@ class Intersection(Model):
                     self.p_east_to_west,
                     self.p_east_to_south,
                 ],
-                self.max_speed_horizontal
+                self.max_speed_horizontal,
+                (self.alpha_factor, self.beta_factor)
             )
         )
 
@@ -114,7 +119,8 @@ class Intersection(Model):
                     self.p_south_to_west,
                     self.p_south_to_south,
                 ], 
-                self.max_speed_vertical
+                self.max_speed_vertical,
+                (self.alpha_factor, self.beta_factor)
             )
         )
 
@@ -129,10 +135,36 @@ class Intersection(Model):
 
         self.schedule.step()
 
+        self.update_priority_queue()
+        print(self.priority_queue)
+
         # Save the statistics
         self.average_speed.collect(self)
         self.throughput.collect(self)
         self.waiting_cars.collect(self)
+
+    def update_priority_queue(self):
+        priority_queue = {}
+        for road in self.roads:
+            if road.first:
+                priority_queue[road.first] = road.first.stop_step
+
+        self.priority_queue = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]     
+
+        print(self.priority_queue)
+
+    # def update_priority_queues(self):
+    #     priority_queue = {}
+
+    #     # build priority queue
+    #     for road in self.roads:
+    #         if road.first:
+    #             priority_queue[road.first] = road.first.stop_step
+
+    #     # set priority queues            
+    #     for road in self.roads:
+    #         if road.first:
+    #             road.first.priority_queue = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]        
 
     def run_model(self, n=100):
         for _ in range(n):

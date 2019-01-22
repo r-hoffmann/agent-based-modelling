@@ -13,3 +13,6 @@ class Action:
 
     def do_nothing(self):
         pass
+
+    def stop(self):
+        self.velocity = 0 

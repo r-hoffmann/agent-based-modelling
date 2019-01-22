@@ -5,7 +5,7 @@ import numpy as np
 
 
 class Road:
-    def __init__(self, model, start_location, direction, p_car_spawn, p_next_directions, max_speed):
+    def __init__(self, model, start_location, direction, p_car_spawn, p_next_directions, max_speed, social_factors):
         """
         Creates a road
         :param start_location: The location of the right most cell of the right part of the road
@@ -28,6 +28,8 @@ class Road:
         self.stop_line_pos = self.calculate_stop_line(1)
 
         self.p_next_directions = p_next_directions
+
+        self.alpha_factor, self.beta_factor = social_factors
 
     # line_height is the height of the line (line width == lane_width)
     def calculate_stop_line(self, line_height):
@@ -53,7 +55,7 @@ class Road:
 
         # TODO: Add different velocities by increasing the sigma
         velocity = int(random.gauss(self.max_speed, 0))
-        bmw_factor = random.random()
+        bmw_factor = np.random.beta(self.alpha_factor, self.beta_factor)
         car = Car(
             unique_id,
             self.model,
