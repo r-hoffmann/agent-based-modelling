@@ -3,6 +3,7 @@ from mesa.space import MultiGrid
 from mesa.time import SimultaneousActivation
 from mesa.datacollection import DataCollector
 from lib.Road import Road
+from lib.VisualisationSquare import VisualisationSquare
 import matplotlib.pyplot as plt
 
 from lib.Direction import Direction
@@ -49,7 +50,7 @@ class Intersection(Model):
         self.number_of_locked_sections.collect(self)
 
         self.intersection_corners = self.get_intersection_corners()
-
+        self.visualisations = []
 
     def section_is_locked(self, direction):
         return self.is_locked_section[direction]
@@ -172,6 +173,30 @@ class Intersection(Model):
         self.throughput.collect(self)
         self.waiting_cars.collect(self)
         self.number_of_locked_sections.collect(self)
+
+        # Make visualisations
+        for v in self.visualisations:
+            self.grid.remove_agent(v)
+        self.visualisations = []
+        lane_width = 6
+        mid_x = self.size // 2 + 2
+        mid_y = self.size // 2 + 2
+    
+        middle_squares = [
+            [mid_x - lane_width, mid_y - lane_width, self.is_locked_section[Direction.SOUTH_WEST]],
+            [mid_x + 2, mid_y - lane_width, self.is_locked_section[Direction.SOUTH_EAST]],
+            [mid_x - lane_width, mid_y + 2, self.is_locked_section[Direction.NORTH_WEST]],
+            [mid_x + 2, mid_y + 2, self.is_locked_section[Direction.NORTH_EAST]]
+        ]
+
+        for x, y, busy in middle_squares:
+            if busy:
+                color = 'rgba(255, 0, 0, 0.5)'
+            else:
+                color = 'rgba(0, 255, 0, 0.5)'
+            square = VisualisationSquare(x, y, color)
+            self.grid.place_agent(square, [x, y])
+            self.visualisations.append(square)
 
     def run_model(self, n=100):
         for _ in range(n):

@@ -5,9 +5,22 @@ from mesa.visualization.modules import ChartModule
 from lib.Intersection import Intersection
 from lib.Fourway import Fourway
 from lib.Direction import Direction
+from lib.VisualisationSquare import VisualisationSquare
 
 
 def agent_portrayal(agent):
+    if agent.__class__ == VisualisationSquare:
+        return {
+            "x": agent.x,
+            "y": agent.y,
+            "w": 6,
+            "h": 6,
+            "Shape": "rect",
+            "Layer": 0,
+            "Color": agent.color,
+            "Filled": True
+        }
+        
     portrayal = {
         "Layer": 100,
         "scale": 7,
