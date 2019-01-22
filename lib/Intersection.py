@@ -29,14 +29,11 @@ class Intersection(Model):
         self.average_speed = DataCollector({"Average speed": lambda m: self.get_average_speed()})
         self.throughput = DataCollector({"Throughput": lambda m: self.get_throughput()})
         self.waiting_cars = DataCollector({"Number of waiting cars": lambda m: self.get_waiting_cars()})
-        self.data = None #DataCollector.get_model_vars_dataframe(self)
 
         self.running = True
         self.average_speed.collect(self)
         self.throughput.collect(self)
         self.waiting_cars.collect(self)
-
-        self.model_vars = [self.throughput,self.average_speed]
 
         self.intersection_corners = self.get_intersection_corners()
 
@@ -151,7 +148,6 @@ class Intersection(Model):
     def run_model(self, n=100):
         for _ in range(n):
             self.step()
-        #self.data.to_csv('data_output')
 
 
     def get_average_speed(self):
@@ -161,7 +157,6 @@ class Intersection(Model):
         return 0
 
     def get_throughput(self):
-
         throughput = self.cars_removed
         return throughput
 
