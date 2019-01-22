@@ -5,9 +5,7 @@ from mesa.datacollection import DataCollector
 from lib.Road import Road
 from lib.VisualisationSquare import VisualisationSquare
 import matplotlib.pyplot as plt
-
 from lib.Direction import Direction
-
 
 class Intersection(Model):
     def __init__(self, **args):
@@ -51,6 +49,13 @@ class Intersection(Model):
 
         self.intersection_corners = self.get_intersection_corners()
         self.visualisations = []
+        
+        intersection_to_visualisation_function = {
+            'Fourway': lambda m: fourway_get_visualisations(m),
+            'Traffic lights': lambda m: trafficlights_get_visualisations(m)
+        }
+
+        self.visualisation_function = intersection_to_visualisation_function[self.intersection_type]
 
     def section_is_locked(self, direction):
         return self.is_locked_section[direction]
@@ -174,29 +179,7 @@ class Intersection(Model):
         self.waiting_cars.collect(self)
         self.number_of_locked_sections.collect(self)
 
-        # Make visualisations
-        for v in self.visualisations:
-            self.grid.remove_agent(v)
-        self.visualisations = []
-        lane_width = 6
-        mid_x = self.size // 2 + 2
-        mid_y = self.size // 2 + 2
-    
-        middle_squares = [
-            [mid_x - lane_width, mid_y - lane_width, self.is_locked_section[Direction.SOUTH_WEST]],
-            [mid_x + 2, mid_y - lane_width, self.is_locked_section[Direction.SOUTH_EAST]],
-            [mid_x - lane_width, mid_y + 2, self.is_locked_section[Direction.NORTH_WEST]],
-            [mid_x + 2, mid_y + 2, self.is_locked_section[Direction.NORTH_EAST]]
-        ]
-
-        for x, y, busy in middle_squares:
-            if busy:
-                color = 'rgba(255, 0, 0, 0.5)'
-            else:
-                color = 'rgba(0, 255, 0, 0.5)'
-            square = VisualisationSquare(x, y, color)
-            self.grid.place_agent(square, [x, y])
-            self.visualisations.append(square)
+        self.visualisation_function(self)
 
     def run_model(self, n=100):
         for _ in range(n):
@@ -216,6 +199,56 @@ class Intersection(Model):
 
     def get_number_of_locked_sections(self):
         return sum([1 for s in self.is_locked_section if self.is_locked_section[s]])
+
+def fourway_get_visualisations(intersection):
+    # Make visualisations
+    for v in intersection.visualisations:
+        intersection.grid.remove_agent(v)
+    intersection.visualisations = []
+    lane_width = 6
+    mid_x = intersection.size // 2 + 2
+    mid_y = intersection.size // 2 + 2
+
+    middle_squares = [
+        [mid_x - lane_width, mid_y - lane_width, intersection.is_locked_section[Direction.SOUTH_WEST]],
+        [mid_x + 2, mid_y - lane_width, intersection.is_locked_section[Direction.SOUTH_EAST]],
+        [mid_x - lane_width, mid_y + 2, intersection.is_locked_section[Direction.NORTH_WEST]],
+        [mid_x + 2, mid_y + 2, intersection.is_locked_section[Direction.NORTH_EAST]]
+    ]
+
+    for x, y, busy in middle_squares:
+        if busy:
+            color = 'rgba(255, 0, 0, 0.5)'
+        else:
+            color = 'rgba(0, 255, 0, 0.5)'
+        square = VisualisationSquare(x, y, color)
+        intersection.grid.place_agent(square, [x, y])
+        intersection.visualisations.append(square)
+
+def trafficlights_get_visualisations(intersection):
+    # Make visualisations
+    for v in intersection.visualisations:
+        intersection.grid.remove_agent(v)
+    intersection.visualisations = []
+    lane_width = 6
+    mid_x = intersection.size // 2 + 2
+    mid_y = intersection.size // 2 + 2
+
+    traffic_light_squares = [
+        [mid_x - lane_width, mid_y - lane_width, intersection.is_locked_section[Direction.EAST]],
+        [mid_x + 2, mid_y - lane_width, intersection.is_locked_section[Direction.NORTH]],
+        [mid_x - lane_width, mid_y + 2, intersection.is_locked_section[Direction.WEST]],
+        [mid_x + 2, mid_y + 2, intersection.is_locked_section[Direction.SOUTH]]
+    ]
+
+    for x, y, busy in middle_squares:
+        if busy:
+            color = 'rgba(255, 0, 0, 0.5)'
+        else:
+            color = 'rgba(0, 255, 0, 0.5)'
+        square = VisualisationSquare(x, y, color)
+        intersection.grid.place_agent(square, [x, y])
+        intersection.visualisations.append(square)
 
 
 # model = Intersection(

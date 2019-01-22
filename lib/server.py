@@ -2,11 +2,9 @@ from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import UserSettableParameter
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule
-from lib.Intersection import Intersection
-from lib.Fourway import Fourway
+from lib.Intersection import *
 from lib.Direction import Direction
 from lib.VisualisationSquare import VisualisationSquare
-
 
 def agent_portrayal(agent):
     if agent.__class__ == VisualisationSquare:
@@ -112,6 +110,8 @@ model_params = {
     "max_speed_horizontal": UserSettableParameter('slider', "Max speed horizontal road", 10, 10, 30, 1),
     "max_speed_vertical": UserSettableParameter('slider', "Max speed vertical road", 10, 0, 30, 1),
     "a_factor": UserSettableParameter('slider', "Antisocial factor mean", .05, 0, 1, .01),
+    "intersection_type": UserSettableParameter('choice', 'Intersection type', value='Traffic lights',
+                                              choices=['Fourway', 'Traffic lights']),
     "north": UserSettableParameter('static_text', value="From North"),
     "p_car_spawn_north": UserSettableParameter('slider', "Spawn Probability", 0.0, 0, 1, 0.01),
     "p_north_to_north": UserSettableParameter('slider', 'To North', 1, 0, 1, 0.01),
@@ -138,11 +138,9 @@ model_params = {
     "p_south_to_south": UserSettableParameter('slider', 'To South', 1.0, 0, 1, 0.01),
 }
 
-# Currently working on Fourway, change accordingly
-for local_include in Fourway().local_includes:
-    ChartModule.local_includes.append(local_include)
+ChartModule.local_includes.append('assets/js/visualisation_intersection.js')
 
 ChartModule.local_includes.append('assets/js/visualisation_extra.js')
 
 server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_waiting_cars, chart_locked_sections],
-                       "Fourway Model", model_params)
+                       "Intersection Model", model_params)
