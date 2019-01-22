@@ -27,7 +27,7 @@ class Road:
 
         self.stop_line_pos = self.calculate_stop_line(1)
 
-        self.p_next_directions = p_next_directions
+        self.p_next_directions = np.array(p_next_directions) / sum(p_next_directions)
 
     # line_height is the height of the line (line width == lane_width)
     def calculate_stop_line(self, line_height):

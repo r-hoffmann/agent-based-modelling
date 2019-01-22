@@ -179,7 +179,7 @@ class Car(Agent):
         return brake_because_vehicle or brake_because_intersection
 
     def should_accelerate(self):
-        return self.velocity < self.road.max_speed and not self.should_brake(min(self.velocity + self.acceleration, self.road.max_speed))
+        return self.velocity < self.road.max_speed and not self.should_brake(min(self.velocity + self.acceleration, self.road.max_speed)) and not self.is_at_intersection()
 
     def get_braking_speed(self):
         stop_distance = self.calculate_stop_distance(self.velocity)
@@ -359,16 +359,16 @@ class Car(Agent):
                 self.stop_step = self.model.schedule.steps
                 self.road.first = self
             # ik sta stil maar wacht minstens 1 tijdstap
-            elif self.road.first == self and self.can_turn():
+            elif self.road.first == self:
                 self.priority_queue = self.get_priority_queue()
 
                 first, _ = next(iter(self.priority_queue))
-                if first == self:
+                if first == self and self.can_turn():
                     self.turning = True
                     self.road.first = None
                     self.move()
-            # else:
-            #     self.move()
+            else:
+                self.move()
         else:
             if self.current_direction == Direction.EAST:
                 if self.pos[0] + self.velocity >= self.model.size:
