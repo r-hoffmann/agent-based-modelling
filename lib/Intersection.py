@@ -265,20 +265,21 @@ def rotate_trafficlights(intersection):
     from_west = intersection.t_from_west
     from_south = intersection.t_from_south
 
-    total = from_north + from_west + from_east + from_south
+    # 4 * 3 is margin between traffic lights "Orange light"
+    total = from_north + from_west + from_east + from_south + 4 * 3
 
     current_step = intersection.schedule.steps
 
     current_place_in_rotation = current_step % total
+    green_light_direction = None
     if current_place_in_rotation < from_north:
         green_light_direction = Direction.SOUTH
-    elif current_place_in_rotation < from_north + from_east:
+    elif from_north + 3 <= current_place_in_rotation < from_north + from_east + 3:
         green_light_direction = Direction.WEST
-    elif current_place_in_rotation < from_north + from_east + from_south:
+    elif from_north + from_east + 6 <= current_place_in_rotation < from_north + from_east + from_south + 6:
         green_light_direction = Direction.NORTH
-    else:
+    elif from_north + from_east + from_south + 9 <= current_place_in_rotation < from_north + from_east + from_south + from_west + 9:
         green_light_direction = Direction.EAST
-    print(current_place_in_rotation, green_light_direction)
 
     directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
     for direction in directions:

@@ -53,6 +53,7 @@ class Car(Agent):
 
         # For long turn and u turn
         self.turning = False
+        self.turn_completed = False
         self.turn_step = 0
 
         self.turn_type = self.get_turn_type()
@@ -251,9 +252,11 @@ class Car(Agent):
 
     def turn_finished(self):
         self.turning = False
-        self.model.unlock_section(SECTIONS_TO_LOCK[self.initial_direction][self.turn_type - 1], self)
+        if self.model.intersection_type == 'Fourway':
+            self.model.unlock_section(SECTIONS_TO_LOCK[self.initial_direction][self.turn_type - 1], self)
         self.move()
         self.turn_step = 0
+        self.turn_completed = True
 
     # Take a short turn
     def intersection_short_turn(self):
@@ -332,12 +335,12 @@ class Car(Agent):
             self.current_direction = Direction((int(self.current_direction) - 1) % 8)
 
     def lock_turn(self):
-        sections_to_lock = SECTIONS_TO_LOCK[self.initial_direction][self.turn_step:self.turn_type]
-        print(sections_to_lock)
-        self.model.lock_sections(sections_to_lock, self)
-        if self.turn_step > 0:
-            unlock_section = SECTIONS_TO_LOCK[self.initial_direction][self.turn_step - 1]
-            self.model.unlock_section(unlock_section, self)
+        if self.model.intersection_type == 'Fourway':
+            sections_to_lock = SECTIONS_TO_LOCK[self.initial_direction][self.turn_step:self.turn_type]
+            self.model.lock_sections(sections_to_lock, self)
+            if self.turn_step > 0:
+                unlock_section = SECTIONS_TO_LOCK[self.initial_direction][self.turn_step - 1]
+                self.model.unlock_section(unlock_section, self)
 
     def can_turn(self):
         turn = SECTIONS_TO_LOCK[self.initial_direction][:self.turn_type]
@@ -381,6 +384,9 @@ class Car(Agent):
                     self.move()
             elif self.model.intersection_type == 'Traffic lights':
                 if not self.model.is_locked_section[self.current_direction] and self.is_at_stopline():
+                    self.turning = True
+                    self.move()
+                if self.turn_completed:
                     self.move()
         else:
             if self.current_direction == Direction.EAST:
