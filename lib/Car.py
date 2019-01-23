@@ -368,8 +368,21 @@ class Car(Agent):
                 self.road.first = self
             # ik sta stil maar wacht minstens 1 tijdstap
             elif self.road.first == self:
-                first, _ = next(iter(self.model.priority_queue))
+                priority_queue = self.model.priority_queue
 
+                # get all cars that can go first
+                first_cars = [k for k,v in priority_queue.items() if v == min(priority_queue.values())]
+
+                if len(first_cars) == 1:
+                    first = first_cars[0]
+                # if multiple cars come in, the one with the lowest bmw factor take priority
+                else:
+                    tmp2 = {}
+
+                    for car in first_cars:
+                        tmp2[car] = car.bmw_factor
+
+                    first = min(tmp2, key=tmp2.get)
                 # Car can move
                 if first == self:
                     self.road.first = None

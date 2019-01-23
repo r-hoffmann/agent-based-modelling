@@ -158,9 +158,10 @@ class Intersection(Model):
             if road.first:
                 priority_queue[road.first] = road.first.stop_step
 
-        self.priority_queue = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]     
+        # self.priority_queue = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]     
+        self.priority_queue = priority_queue
 
-        print(self.priority_queue)
+        # print(self.priority_queue)
 
     # def update_priority_queues(self):
     #     priority_queue = {}
