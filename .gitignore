@@ -3,5 +3,8 @@
 .idea/
 bin/
 venv/
+test.csv
+data_output
+output
 
 \.ipynb_checkpoints/
