@@ -407,6 +407,7 @@ class Car(Agent):
     def remove_car(self, agent):
         self.model.grid.remove_agent(agent)
         self.model.schedule.remove(agent)
+        self.model.finished_cars.append(agent)
 
     def __repr__(self):
         return str(self.id)

@@ -1,10 +1,42 @@
-from mesa.visualization.ModularVisualization import ModularServer
+from mesa.visualization.ModularVisualization import ModularServer, VisualizationElement
 from mesa.visualization.UserParam import UserSettableParameter
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule
 from lib.Intersection import *
 from lib.Direction import Direction
 from lib.VisualisationSquare import VisualisationSquare
+
+class HistogramModule(VisualizationElement):
+    package_includes = ["Chart.min.js", "ChartModule.js"]
+    local_includes = ["assets/js/HistogramModule.js"]
+
+    def __init__(self, series, canvas_height=200, canvas_width=500,
+                 data_collector_name="datacollector"):
+
+        self.series = series
+        self.canvas_height = canvas_height
+        self.canvas_width = canvas_width
+        self.bins = list(range(10))
+        self.data_collector_name = data_collector_name
+
+        new_element = "new HistogramModule({}, {},  {})"
+        new_element = new_element.format(self.bins,
+                                         self.canvas_width,
+                                         self.canvas_height)
+        self.js_code = "elements.push(" + new_element + ");"
+
+    def render(self, model):
+        current_values = []
+        data_collector = getattr(model, self.data_collector_name)
+
+        for s in self.series:
+            name = s["Label"]
+            try:
+                val = data_collector.model_vars[name][-1]  # Latest value
+            except (IndexError, KeyError):
+                val = 0
+            current_values.append(val)
+        return current_values
 
 def agent_portrayal(agent):
     if agent.__class__ == VisualisationSquare:
@@ -95,6 +127,16 @@ chart_throughput = ChartModule([
     data_collector_name='throughput'
 )
 
+chart_mean_crossover = ChartModule([
+    {"Label": "Mean crossover time", "Color": "#FFFF00"}],
+    data_collector_name='mean_crossover'
+)
+
+histogram_crossover = HistogramModule([
+    {"Label": "Histogram of mean crossover time", "Color": "#FF00FF"}],
+    data_collector_name='mean_crossover_hist'
+)
+
 chart_waiting_cars = ChartModule([
     {"Label": "Number of waiting cars", "Color": "#00FF00"}],
     data_collector_name='waiting_cars'
@@ -147,5 +189,5 @@ ChartModule.local_includes.append('assets/js/visualisation_intersection.js')
 
 ChartModule.local_includes.append('assets/js/visualisation_extra.js')
 
-server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_waiting_cars, chart_locked_sections],
+server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_mean_crossover, histogram_crossover, chart_waiting_cars, chart_locked_sections],
                        "Intersection Model", model_params)

@@ -6,6 +6,7 @@ from lib.Road import Road
 from lib.VisualisationSquare import VisualisationSquare
 import matplotlib.pyplot as plt
 from lib.Direction import Direction
+import numpy as np
 
 class Intersection(Model):
     def __init__(self, **args):
@@ -17,6 +18,10 @@ class Intersection(Model):
         self.roads = []
         self.create_roads()
         self.cars = []
+        self.finished_cars = []
+
+        # Visualisation
+        self.bins = list(range(10))
 
         self.is_locked_section = {
             Direction.NORTH_WEST: False,
@@ -41,12 +46,16 @@ class Intersection(Model):
         self.grid = MultiGrid(self.size, self.size, True)
         self.schedule = SimultaneousActivation(self)
         self.average_speed = DataCollector({"Average speed": lambda m: self.get_average_speed()})
+        self.mean_crossover = DataCollector({"Mean crossover time": lambda m: self.get_mean_crossover()})
+        self.mean_crossover_hist = DataCollector({"Mean crossover histogram": lambda m: self.get_mean_crossover_hist()})
         self.throughput = DataCollector({"Throughput": lambda m: self.get_throughput()})
         self.waiting_cars = DataCollector({"Number of waiting cars": lambda m: self.get_waiting_cars()})
         self.number_of_locked_sections = DataCollector({"Number of locked sections": lambda m: self.get_number_of_locked_sections()})
 
         self.running = True
         self.average_speed.collect(self)
+        self.mean_crossover.collect(self)
+        self.mean_crossover_hist.collect(self)
         self.throughput.collect(self)
         self.waiting_cars.collect(self)
         self.number_of_locked_sections.collect(self)
@@ -174,12 +183,15 @@ class Intersection(Model):
                 car = road.car_queue.pop()
                 self.schedule.add(car)
                 self.grid.place_agent(car, car.pos)
+                car.start_step = self.schedule.steps
 
         self.schedule.step()
 
         # Save the statistics
         self.average_speed.collect(self)
         self.throughput.collect(self)
+        self.mean_crossover.collect(self)
+        self.mean_crossover_hist.collect(self)
         self.waiting_cars.collect(self)
         self.number_of_locked_sections.collect(self)
 
@@ -200,6 +212,19 @@ class Intersection(Model):
 
     def get_throughput(self):
         return 100
+
+    def get_mean_crossover(self):
+        # print([(agent.stop_step, agent.start_step) for agent in self.finished_cars])
+        if len(self.finished_cars) > 0:
+            return sum([agent.stop_step - agent.start_step for agent in self.finished_cars]) / len(self.finished_cars)
+        return 0
+
+    def get_mean_crossover_hist(self):        
+        if len(self.finished_cars) > 0:
+            crossover_vals = [agent.stop_step - agent.start_step for agent in self.finished_cars]
+            hist = np.histogram(crossover_vals, bins=self.bins)[0]
+            return [int(x) for x in hist]
+        return [0]
 
     def get_waiting_cars(self):
         return sum([1 for agent in self.schedule.agents if agent.velocity==0])
