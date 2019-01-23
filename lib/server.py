@@ -1,13 +1,56 @@
-from mesa.visualization.ModularVisualization import ModularServer
+from mesa.visualization.ModularVisualization import ModularServer, VisualizationElement
 from mesa.visualization.UserParam import UserSettableParameter
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule
-from lib.Intersection import Intersection
-from lib.Fourway import Fourway
+from lib.Intersection import *
 from lib.Direction import Direction
+from lib.VisualisationSquare import VisualisationSquare
 
+class HistogramModule(VisualizationElement):
+    package_includes = ["Chart.min.js", "ChartModule.js"]
+    local_includes = ["assets/js/HistogramModule.js"]
+
+    def __init__(self, series, canvas_height=1, canvas_width=1,
+                 data_collector_name="datacollector"):
+
+        self.series = series
+        self.canvas_height = canvas_height
+        self.canvas_width = canvas_width
+        self.bins = list(range(10))
+        self.data_collector_name = data_collector_name
+
+        new_element = "new HistogramModule({}, {},  {})"
+        new_element = new_element.format(self.bins,
+                                         self.canvas_width,
+                                         self.canvas_height)
+        self.js_code = "elements.push(" + new_element + ");"
+
+    def render(self, model):
+        current_values = []
+        data_collector = getattr(model, self.data_collector_name)
+
+        for s in self.series:
+            name = s["Label"]
+            try:
+                val = data_collector.model_vars[name][-1]  # Latest value
+            except (IndexError, KeyError):
+                val = 0
+            current_values.append(val)
+        return current_values
 
 def agent_portrayal(agent):
+    if agent.__class__ == VisualisationSquare:
+        return {
+            "x": agent.x,
+            "y": agent.y,
+            "w": 6,
+            "h": 6,
+            "Shape": "rect",
+            "Layer": 0,
+            "Color": agent.color,
+            "Filled": True
+        }
+        
     portrayal = {
         "Layer": 100,
         "scale": 7,
@@ -84,9 +127,24 @@ chart_throughput = ChartModule([
     data_collector_name='throughput'
 )
 
+chart_mean_crossover = ChartModule([
+    {"Label": "Mean crossover time", "Color": "#FFFF00"}],
+    data_collector_name='mean_crossover'
+)
+
+# histogram_crossover = HistogramModule([
+#     {"Label": "Histogram of mean crossover time", "Color": "#FF00FF"}],
+#     data_collector_name='mean_crossover_hist'
+# )
+
 chart_waiting_cars = ChartModule([
     {"Label": "Number of waiting cars", "Color": "#00FF00"}],
     data_collector_name='waiting_cars'
+)
+
+chart_locked_sections = ChartModule([
+    {"Label": "Number of locked sections", "Color": "#00FFFF"}],
+    data_collector_name='number_of_locked_sections'
 )
 
 model_params = {
@@ -95,37 +153,42 @@ model_params = {
     "max_speed_vertical": UserSettableParameter('slider', "Max speed vertical road", 10, 5, 15, 1),
     "alpha_factor": UserSettableParameter('slider', "Antisocial alpha factor", 2, 0, 10, .01),
     "beta_factor": UserSettableParameter('slider', "Antisocial beta factor", 5, 0, 10, .01),
+    "intersection_type": UserSettableParameter('choice', 'Intersection type', value='Traffic lights',
+                                              choices=['Fourway', 'Traffic lights']),
+    "traffic_light_title": UserSettableParameter('static_text', value="Trafficlights duration"),
+    "t_from_north": UserSettableParameter('slider', 'From North', 5, 0, 20, 1),
+    "t_from_west": UserSettableParameter('slider', 'From West', 5, 0, 20, 1),
+    "t_from_east": UserSettableParameter('slider', 'From East', 5, 0, 20, 1),
+    "t_from_south": UserSettableParameter('slider', 'From South', 5, 0, 20, 1),
     "north": UserSettableParameter('static_text', value="From North"),
     "p_car_spawn_north": UserSettableParameter('slider', "Spawn Probability", 1, 0, 1, 0.01),
-    "p_north_to_north": UserSettableParameter('slider', 'To North', 0.10, 0, 1, 0.01),
-    "p_north_to_west": UserSettableParameter('slider', 'To West', 0.24, 0, 1, 0.01),
-    "p_north_to_east": UserSettableParameter('slider', 'To East', 0.33, 0, 1, 0.01),
-    "p_north_to_south": UserSettableParameter('slider', 'To South', 0.33, 0, 1, 0.01),
+    "p_north_to_north": UserSettableParameter('slider', 'To North', 1, 0, 1, 0.01),
+    "p_north_to_west": UserSettableParameter('slider', 'To West', 0, 0, 1, 0.01),
+    "p_north_to_east": UserSettableParameter('slider', 'To East', 0, 0, 1, 0.01),
+    "p_north_to_south": UserSettableParameter('slider', 'To South', 0, 0, 1, 0.01),
     "west": UserSettableParameter('static_text', value="From West"),
-    "p_car_spawn_west": UserSettableParameter('slider', "Spawn Probability", 0, 0, 1, 0.01),
-    "p_west_to_north": UserSettableParameter('slider', 'To North', 0.0, 0, 1, 0.01),
-    "p_west_to_west": UserSettableParameter('slider', 'To West', 1.0, 0, 1, 0.01),
+    "p_car_spawn_west": UserSettableParameter('slider', "Spawn Probability", 0.0, 0, 1, 0.01),
+    "p_west_to_north": UserSettableParameter('slider', 'To North', 1.0, 0, 1, 0.01),
+    "p_west_to_west": UserSettableParameter('slider', 'To West', 0.0, 0, 1, 0.01),
     "p_west_to_east": UserSettableParameter('slider', 'To East', 0.0, 0, 1, 0.01),
     "p_west_to_south": UserSettableParameter('slider', 'To South', 0.0, 0, 1, 0.01),
     "east": UserSettableParameter('static_text', value="From East"),
     "p_car_spawn_east": UserSettableParameter('slider', "Spawn Probability", 0, 0, 1, 0.01),
-    "p_east_to_north": UserSettableParameter('slider', 'To North', 0.0, 0, 1, 0.01),
-    "p_east_to_west": UserSettableParameter('slider', 'To West', 0.0, 0, 1, 0.01),
+    "p_east_to_north": UserSettableParameter('slider', 'To North', 1.0, 0, 1, 0.01),
+    "p_east_to_west": UserSettableParameter('slider', 'To West', 1.0, 0, 1, 0.01),
     "p_east_to_east": UserSettableParameter('slider', 'To East', 1.0, 0, 1, 0.01),
-    "p_east_to_south": UserSettableParameter('slider', 'To South', 0.0, 0, 1, 0.01),
+    "p_east_to_south": UserSettableParameter('slider', 'To South', 1.0, 0, 1, 0.01),
     "south": UserSettableParameter('static_text', value="From South"),
-    "p_car_spawn_south": UserSettableParameter('slider', "Spawn Probability", 1, 0, 1, 0.01),
-    "p_south_to_north": UserSettableParameter('slider', 'To North', 0.0, 0, 1, 0.01),
-    "p_south_to_west": UserSettableParameter('slider', 'To West', 0.0, 0, 1, 0.01),
-    "p_south_to_east": UserSettableParameter('slider', 'To East', 0.0, 0, 1, 0.01),
+    "p_car_spawn_south": UserSettableParameter('slider', "Spawn Probability", 0.0, 0, 1, 0.01),
+    "p_south_to_north": UserSettableParameter('slider', 'To North', 1.0, 0, 1, 0.01),
+    "p_south_to_west": UserSettableParameter('slider', 'To West', 1.0, 0, 1, 0.01),
+    "p_south_to_east": UserSettableParameter('slider', 'To East', 1.0, 0, 1, 0.01),
     "p_south_to_south": UserSettableParameter('slider', 'To South', 1.0, 0, 1, 0.01),
 }
 
-# Currently working on Fourway, change accordingly
-for local_include in Fourway().local_includes:
-    ChartModule.local_includes.append(local_include)
+ChartModule.local_includes.append('assets/js/visualisation_intersection.js')
 
 ChartModule.local_includes.append('assets/js/visualisation_extra.js')
 
-server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_waiting_cars],
-                       "Fourway Model", model_params)
+server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_mean_crossover, chart_waiting_cars, chart_locked_sections],
+                       "Intersection Model", model_params)

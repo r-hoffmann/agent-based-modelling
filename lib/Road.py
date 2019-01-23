@@ -27,7 +27,7 @@ class Road:
 
         self.stop_line_pos = self.calculate_stop_line(1)
 
-        self.p_next_directions = p_next_directions
+        self.p_next_directions = np.array(p_next_directions) / sum(p_next_directions)
 
         self.alpha_factor, self.beta_factor = social_factors
 
