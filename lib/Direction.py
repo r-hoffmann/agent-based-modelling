@@ -31,4 +31,3 @@ class Direction(IntEnum):
         if self == c:
             return True
         return False
-
