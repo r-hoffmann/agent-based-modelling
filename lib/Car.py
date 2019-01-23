@@ -149,9 +149,13 @@ class Car(Agent):
             return False
 
         self.following_vehicle = self.model.grid[cell_ahead[0]][cell_ahead[1]]
+        if type(self.following_vehicle) != Car:
+            self.following_vehicle = None
         return free_space_ahead < stop_distance
 
     def approaching_intersection(self, stop_distance):
+        if self.current_direction == self.next_direction and self.initial_direction != self.next_direction:
+            return False
         if self.initial_direction == Direction.EAST and self.pos[0] < self.model.size // 2 - 10:
             if self.pos[0] + self.velocity + stop_distance >= self.model.size // 2 - 10:
                 return True
@@ -345,8 +349,13 @@ class Car(Agent):
             goal_speed = 0
             if self.following_vehicle is not None:
                 if type(self.following_vehicle) == set:
-                    self.following_vehicle = next(iter(self.following_vehicle))
-                goal_speed = self.following_vehicle.velocity
+                    self.following_agents = self.following_vehicle
+                    for agent in self.following_agents:
+                        if type(self.following_vehicle) != Car:
+                            self.following_vehicle = next(iter(self.following_agents))
+
+                if not self.following_vehicle.is_at_intersection:
+                    goal_speed = self.following_vehicle.velocity
             self.action.brake(goal_speed)
         elif self.should_accelerate():
             self.action.accelerate()
@@ -354,21 +363,25 @@ class Car(Agent):
         if self.turning:
             self.move()
         elif self.is_at_intersection():
-            # set stop counter when car first arrives at the stopline
-            if self.stop_step == 0:
-                self.stop_step = self.model.schedule.steps
-                self.road.first = self
-            # ik sta stil maar wacht minstens 1 tijdstap
-            elif self.road.first == self:
-                self.priority_queue = self.get_priority_queue()
+            if self.model.intersection_type == 'Fourway':
+                # set stop counter when car first arrives at the stopline
+                if self.stop_step == 0:
+                    self.stop_step = self.model.schedule.steps
+                    self.road.first = self
+                # ik sta stil maar wacht minstens 1 tijdstap
+                elif self.road.first == self:
+                    self.priority_queue = self.get_priority_queue()
 
-                first, _ = next(iter(self.priority_queue))
-                if first == self and self.can_turn():
-                    self.turning = True
-                    self.road.first = None
+                    first, _ = next(iter(self.priority_queue))
+                    if first == self and self.can_turn():
+                        self.turning = True
+                        self.road.first = None
+                        self.move()
+                else:
                     self.move()
-            else:
-                self.move()
+            elif self.model.intersection_type == 'Traffic lights':
+                if not self.model.is_locked_section[self.current_direction] and self.is_at_stopline():
+                    self.move()
         else:
             if self.current_direction == Direction.EAST:
                 if self.pos[0] + self.velocity >= self.model.size:

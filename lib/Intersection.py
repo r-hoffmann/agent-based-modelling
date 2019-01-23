@@ -22,7 +22,11 @@ class Intersection(Model):
             Direction.NORTH_WEST: False,
             Direction.NORTH_EAST: False,
             Direction.SOUTH_WEST: False,
-            Direction.SOUTH_EAST: False
+            Direction.SOUTH_EAST: False,
+            Direction.NORTH: True,
+            Direction.WEST: True,
+            Direction.EAST: True,
+            Direction.SOUTH: True,
         }
 
         self.locked_by = {
@@ -179,6 +183,9 @@ class Intersection(Model):
         self.waiting_cars.collect(self)
         self.number_of_locked_sections.collect(self)
 
+        if self.intersection_type == 'Traffic lights':
+            rotate_trafficlights(self)
+
         self.visualisation_function(self)
 
     def run_model(self, n=100):
@@ -235,14 +242,14 @@ def trafficlights_get_visualisations(intersection):
     mid_y = intersection.size // 2 + 2
 
     traffic_light_squares = [
-        [mid_x - lane_width, mid_y - lane_width, intersection.is_locked_section[Direction.EAST]],
-        [mid_x + 2, mid_y - lane_width, intersection.is_locked_section[Direction.NORTH]],
-        [mid_x - lane_width, mid_y + 2, intersection.is_locked_section[Direction.WEST]],
-        [mid_x + 2, mid_y + 2, intersection.is_locked_section[Direction.SOUTH]]
+        [mid_x - 2 * lane_width - 2, mid_y - lane_width, intersection.is_locked_section[Direction.EAST]],
+        [mid_x + 2, mid_y - 2 * lane_width - 2, intersection.is_locked_section[Direction.NORTH]],
+        [mid_x - lane_width - 1, mid_y + lane_width + 3, intersection.is_locked_section[Direction.SOUTH]],
+        [mid_x + lane_width + 3, mid_y + 2, intersection.is_locked_section[Direction.WEST]]
     ]
 
-    for x, y, busy in middle_squares:
-        if busy:
+    for x, y, on_red in traffic_light_squares:
+        if on_red:
             color = 'rgba(255, 0, 0, 0.5)'
         else:
             color = 'rgba(0, 255, 0, 0.5)'
@@ -250,6 +257,32 @@ def trafficlights_get_visualisations(intersection):
         intersection.grid.place_agent(square, [x, y])
         intersection.visualisations.append(square)
 
+
+# Simple traffic light logic
+def rotate_trafficlights(intersection):
+    from_north = intersection.t_from_north
+    from_east = intersection.t_from_east
+    from_west = intersection.t_from_west
+    from_south = intersection.t_from_south
+
+    total = from_north + from_west + from_east + from_south
+
+    current_step = intersection.schedule.steps
+
+    current_place_in_rotation = current_step % total
+    if current_place_in_rotation < from_north:
+        green_light_direction = Direction.SOUTH
+    elif current_place_in_rotation < from_north + from_east:
+        green_light_direction = Direction.WEST
+    elif current_place_in_rotation < from_north + from_east + from_south:
+        green_light_direction = Direction.NORTH
+    else:
+        green_light_direction = Direction.EAST
+    print(current_place_in_rotation, green_light_direction)
+
+    directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
+    for direction in directions:
+        intersection.is_locked_section[direction] = (direction != green_light_direction)
 
 # model = Intersection(
 #     max_speed_horizontal=10,
