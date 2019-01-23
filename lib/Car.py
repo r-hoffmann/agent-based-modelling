@@ -113,34 +113,34 @@ class Car(Agent):
         self.following_vehicle = None
         free_space_ahead = 0
         cell_ahead = self.pos
-        if self.initial_direction == Direction.EAST:
+        if self.current_direction == Direction.EAST:
             cell_ahead = (self.pos[0] + self.length, self.pos[1])
-        elif self.initial_direction == Direction.NORTH:
+        elif self.current_direction == Direction.NORTH:
             cell_ahead = (self.pos[0], self.pos[1] + self.length)
-        elif self.initial_direction == Direction.WEST:
+        elif self.current_direction == Direction.WEST:
             cell_ahead = (self.pos[0] - self.length, self.pos[1])
-        elif self.initial_direction == Direction.SOUTH:
+        elif self.current_direction == Direction.SOUTH:
             cell_ahead = (self.pos[0], self.pos[1] - self.length)
 
         if 0 < cell_ahead[0] < self.model.size and 0 < cell_ahead[1] < self.model.size:
             while self.model.grid.is_cell_empty(cell_ahead):
                 free_space_ahead += 1
-                if self.initial_direction == Direction.EAST:
+                if self.current_direction == Direction.EAST:
                     x_position = self.pos[0] + self.length + free_space_ahead
                     if not (0 < x_position < self.model.size):
                         return False
                     cell_ahead = (x_position, self.pos[1])
-                elif self.initial_direction == Direction.NORTH:
+                elif self.current_direction == Direction.NORTH:
                     y_position = self.pos[1] + self.length + free_space_ahead
                     if not (0 < y_position < self.model.size):
                         return False
                     cell_ahead = (self.pos[0], y_position)
-                elif self.initial_direction == Direction.WEST:
+                elif self.current_direction == Direction.WEST:
                     x_position = self.pos[0] - self.length - free_space_ahead
                     if not (0 < x_position < self.model.size):
                         return False
                     cell_ahead = (x_position, self.pos[1])
-                elif self.initial_direction == Direction.SOUTH:
+                elif self.current_direction == Direction.SOUTH:
                     y_position = self.pos[1] - self.length - free_space_ahead
                     if not (0 < y_position < self.model.size):
                         return False
@@ -351,8 +351,8 @@ class Car(Agent):
                 if type(self.following_vehicle) == set:
                     self.following_agents = self.following_vehicle
                     for agent in self.following_agents:
-                        if type(self.following_vehicle) != Car:
-                            self.following_vehicle = next(iter(self.following_agents))
+                        if type(agent) != Car:
+                            self.following_vehicle = agent
 
                 if not self.following_vehicle.is_at_intersection:
                     goal_speed = self.following_vehicle.velocity
