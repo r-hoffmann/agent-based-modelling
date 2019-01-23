@@ -132,10 +132,10 @@ chart_mean_crossover = ChartModule([
     data_collector_name='mean_crossover'
 )
 
-histogram_crossover = HistogramModule([
-    {"Label": "Histogram of mean crossover time", "Color": "#FF00FF"}],
-    data_collector_name='mean_crossover_hist'
-)
+# histogram_crossover = HistogramModule([
+#     {"Label": "Histogram of mean crossover time", "Color": "#FF00FF"}],
+#     data_collector_name='mean_crossover_hist'
+# )
 
 chart_waiting_cars = ChartModule([
     {"Label": "Number of waiting cars", "Color": "#00FF00"}],
@@ -189,5 +189,5 @@ ChartModule.local_includes.append('assets/js/visualisation_intersection.js')
 
 ChartModule.local_includes.append('assets/js/visualisation_extra.js')
 
-server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_mean_crossover, histogram_crossover, chart_waiting_cars, chart_locked_sections],
+server = ModularServer(Intersection, [grid, chart_average_speed, chart_throughput, chart_mean_crossover, chart_waiting_cars, chart_locked_sections],
                        "Intersection Model", model_params)
