@@ -393,10 +393,11 @@ class Car(Agent):
 
                         first = min(tmp2, key=tmp2.get)
                     # Car can move
-                    if first == self:
+                    if first == self and self.can_turn():
+                        self.turning = True
                         self.road.first = None
                         self.move()
-                    # while at intersection
+                # while at intersection
                 else:
                     self.move()
             elif self.model.intersection_type == 'Traffic lights':
