@@ -405,6 +405,7 @@ class Car(Agent):
                     self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
 
     def remove_car(self, agent):
+        self.finish_step = self.model.schedule.steps
         self.model.grid.remove_agent(agent)
         self.model.schedule.remove(agent)
         self.model.finished_cars.append(agent)

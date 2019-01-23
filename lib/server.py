@@ -10,7 +10,7 @@ class HistogramModule(VisualizationElement):
     package_includes = ["Chart.min.js", "ChartModule.js"]
     local_includes = ["assets/js/HistogramModule.js"]
 
-    def __init__(self, series, canvas_height=200, canvas_width=500,
+    def __init__(self, series, canvas_height=1, canvas_width=1,
                  data_collector_name="datacollector"):
 
         self.series = series
@@ -152,7 +152,7 @@ model_params = {
     "max_speed_horizontal": UserSettableParameter('slider', "Max speed horizontal road", 10, 10, 30, 1),
     "max_speed_vertical": UserSettableParameter('slider', "Max speed vertical road", 10, 0, 30, 1),
     "a_factor": UserSettableParameter('slider', "Antisocial factor mean", .05, 0, 1, .01),
-    "intersection_type": UserSettableParameter('choice', 'Intersection type', value='Fourway',
+    "intersection_type": UserSettableParameter('choice', 'Intersection type', value='Traffic lights',
                                               choices=['Fourway', 'Traffic lights']),
     "traffic_light_title": UserSettableParameter('static_text', value="Trafficlights duration"),
     "t_from_north": UserSettableParameter('slider', 'From North', 5, 0, 20, 1),
@@ -162,17 +162,17 @@ model_params = {
     "north": UserSettableParameter('static_text', value="From North"),
     "p_car_spawn_north": UserSettableParameter('slider', "Spawn Probability", 1, 0, 1, 0.01),
     "p_north_to_north": UserSettableParameter('slider', 'To North', 1, 0, 1, 0.01),
-    "p_north_to_west": UserSettableParameter('slider', 'To West', 1, 0, 1, 0.01),
-    "p_north_to_east": UserSettableParameter('slider', 'To East', 1, 0, 1, 0.01),
-    "p_north_to_south": UserSettableParameter('slider', 'To South', 1, 0, 1, 0.01),
+    "p_north_to_west": UserSettableParameter('slider', 'To West', 0, 0, 1, 0.01),
+    "p_north_to_east": UserSettableParameter('slider', 'To East', 0, 0, 1, 0.01),
+    "p_north_to_south": UserSettableParameter('slider', 'To South', 0, 0, 1, 0.01),
     "west": UserSettableParameter('static_text', value="From West"),
-    "p_car_spawn_west": UserSettableParameter('slider', "Spawn Probability", 1.0, 0, 1, 0.01),
+    "p_car_spawn_west": UserSettableParameter('slider', "Spawn Probability", 0.0, 0, 1, 0.01),
     "p_west_to_north": UserSettableParameter('slider', 'To North', 1.0, 0, 1, 0.01),
     "p_west_to_west": UserSettableParameter('slider', 'To West', 0.0, 0, 1, 0.01),
     "p_west_to_east": UserSettableParameter('slider', 'To East', 0.0, 0, 1, 0.01),
     "p_west_to_south": UserSettableParameter('slider', 'To South', 0.0, 0, 1, 0.01),
     "east": UserSettableParameter('static_text', value="From East"),
-    "p_car_spawn_east": UserSettableParameter('slider', "Spawn Probability", 1, 0, 1, 0.01),
+    "p_car_spawn_east": UserSettableParameter('slider', "Spawn Probability", 0, 0, 1, 0.01),
     "p_east_to_north": UserSettableParameter('slider', 'To North', 1.0, 0, 1, 0.01),
     "p_east_to_west": UserSettableParameter('slider', 'To West', 1.0, 0, 1, 0.01),
     "p_east_to_east": UserSettableParameter('slider', 'To East', 1.0, 0, 1, 0.01),

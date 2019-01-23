@@ -216,12 +216,12 @@ class Intersection(Model):
     def get_mean_crossover(self):
         # print([(agent.stop_step, agent.start_step) for agent in self.finished_cars])
         if len(self.finished_cars) > 0:
-            return sum([agent.stop_step - agent.start_step for agent in self.finished_cars]) / len(self.finished_cars)
+            return sum([agent.finish_step - agent.start_step for agent in self.finished_cars]) / len(self.finished_cars)
         return 0
 
     def get_mean_crossover_hist(self):        
         if len(self.finished_cars) > 0:
-            crossover_vals = [agent.stop_step - agent.start_step for agent in self.finished_cars]
+            crossover_vals = [agent.finish_step - agent.start_step for agent in self.finished_cars]
             hist = np.histogram(crossover_vals, bins=self.bins)[0]
             return [int(x) for x in hist]
         return [0]
