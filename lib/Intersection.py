@@ -247,6 +247,7 @@ class Intersection(Model):
         for direction, car in self.car_per_stopline.items():
             if car:
                 car_to_right = self.car_per_stopline[Direction((int(direction) + 2) % 8)]
+                car_across = self.car_per_stopline[Direction((int(direction) + 4) % 8)]
 
                 priority_queue[car] = True
 
@@ -256,6 +257,9 @@ class Intersection(Model):
                             priority_queue[car] = False
                     else:
                         priority_queue[car] = False
+
+                if car_across and car_across.turn_type == Turn.STRAIGHT:
+                    priority_queue[car] = False
 
         # Nobody can take priority
         if len(priority_queue) > 0 and sum([1 for _, has_priority in priority_queue.items() if has_priority]) == 0:
