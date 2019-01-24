@@ -293,8 +293,9 @@ class Intersection(Model):
         return 0
 
     def get_throughput(self):
-        throughput = len(self.finished_cars)
-        return throughput
+        if self.schedule.steps > 0:
+            return len(self.finished_cars) / self.schedule.steps
+        return 0
 
     def get_mean_crossover(self):
         # print([(agent.stop_step, agent.start_step) for agent in self.finished_cars])
