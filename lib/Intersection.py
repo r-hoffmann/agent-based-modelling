@@ -293,7 +293,7 @@ class Intersection(Model):
         return 0
 
     def get_throughput(self):
-        throughput = self.cars_removed
+        throughput = len(self.finished_cars)
         return throughput
 
     def get_mean_crossover(self):
