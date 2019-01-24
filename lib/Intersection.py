@@ -16,7 +16,7 @@ class Intersection(Model):
         # @TODO: can/should be made different on different roads
         super().__init__()
         self.parameters = []
-        if args['parameters_as_dict']:
+        if 'parameters_as_dict' in args:
             for field in args['parameters']:
                 setattr(self, field, args['parameters'][field])
                 self.parameters.append(field)
