@@ -27,7 +27,7 @@ class DataWriter:
         df3 = self.intersection.waiting_cars.get_model_vars_dataframe()
         df = pd.DataFrame([df1.iloc[:,0], df2.iloc[:,0], df3.iloc[:,0]])
         df = df.transpose()
-        df.to_csv('{}/{}/{}'.format(self.root_dir, self.intersection.intersection_type, self.resolve_filename()))
+        df.to_csv('{}/{}/{}'.format(self.root_dir, self.intersection.intersection_type, self.resolve_filename()).lower().replace(' ', '_'))
 
     def run(self, n=1000):
         self.intersection.run_model(n)

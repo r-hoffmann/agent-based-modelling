@@ -1,33 +1,47 @@
 from lib.DataWriter import DataWriter
 from lib.Intersection import Intersection
+from itertools import product
 
-intersection = Intersection(
-    max_speed_horizontal=10,
-    max_speed_vertical=10,
-    alpha_factor=.05,
-    beta_factor=.05,
-    intersection_type='Fourway',
-    p_car_spawn_north=0.5,
-    p_north_to_north=0.10,
-    p_north_to_west=0.24,
-    p_north_to_east=0.33,
-    p_north_to_south=0.33,
-    p_car_spawn_west=0.0,
-    p_west_to_north=0.0,
-    p_west_to_west=1.0,
-    p_west_to_east=0.0,
-    p_west_to_south=0.0,
-    p_car_spawn_east=0.0,
-    p_east_to_north=0.0,
-    p_east_to_west=0.0,
-    p_east_to_east=1.0,
-    p_east_to_south=0.0,
-    p_car_spawn_south=0.0,
-    p_south_to_north=0.0,
-    p_south_to_west=0.0,
-    p_south_to_east=0.0,
-    p_south_to_south=1.0,
-)
+from_0_to_1 = [x / 10.0 for x in [1]]
 
-datawriter = DataWriter(intersection)
-datawriter.run()
+parameters =  {
+    'max_speed_horizontal': range(3, 16, 3),
+    'max_speed_vertical': range(3, 16, 3),
+    'alpha_factor': from_0_to_1,
+    'beta_factor': from_0_to_1,
+    't_from_north': range(1, 10),
+    't_from_west': range(1, 10),
+    't_from_east': range(1, 10),
+    't_from_south': range(1, 10),
+    'intersection_type': ['Traffic lights', 'Fourway', 'Equivalent'],
+    'p_car_spawn_north': from_0_to_1,
+    'p_north_to_north': from_0_to_1,
+    'p_north_to_west': from_0_to_1,
+    'p_north_to_east': from_0_to_1,
+    'p_north_to_south': from_0_to_1,
+    'p_car_spawn_west': from_0_to_1,
+    'p_west_to_north': from_0_to_1,
+    'p_west_to_west': from_0_to_1,
+    'p_west_to_east': from_0_to_1,
+    'p_west_to_south': from_0_to_1,
+    'p_car_spawn_east': from_0_to_1,
+    'p_east_to_north': from_0_to_1,
+    'p_east_to_west': from_0_to_1,
+    'p_east_to_east': from_0_to_1,
+    'p_east_to_south': from_0_to_1,
+    'p_car_spawn_south': from_0_to_1,
+    'p_south_to_north': from_0_to_1,
+    'p_south_to_west': from_0_to_1,
+    'p_south_to_east': from_0_to_1,
+    'p_south_to_south': from_0_to_1
+}
+
+
+parameter_space = [dict(zip(parameters, v)) for v in product(*parameters.values())]
+print('Generating {} intersections'.format(len(parameter_space)))
+
+for parameter_set in parameter_space:
+    intersection = Intersection( parameters=parameter_set, parameters_as_dict=True )
+    datawriter = DataWriter(intersection)
+    datawriter.run()
+    
