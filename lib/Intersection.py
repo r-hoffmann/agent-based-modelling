@@ -15,8 +15,16 @@ class Intersection(Model):
     def __init__(self, **args):
         # @TODO: can/should be made different on different roads
         super().__init__()
-        for field in args:
-            setattr(self, field, args[field])
+        self.parameters = []
+        if args['parameters_as_dict']:
+            for field in args['parameters']:
+                setattr(self, field, args['parameters'][field])
+                self.parameters.append(field)
+        else:
+            for field in args:
+                setattr(self, field, args[field])
+                self.parameters.append(field)
+
 
         self.roads = []
         self.create_roads()

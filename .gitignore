@@ -6,5 +6,6 @@ venv/
 test.csv
 data_output
 output
+data/*/*.csv
 
 \.ipynb_checkpoints/
