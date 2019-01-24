@@ -1,7 +1,9 @@
+import random
+
+import numpy as np
+
 from lib.Car import Car
 from lib.Direction import Direction
-import random
-import numpy as np
 
 
 class Road:
@@ -33,8 +35,8 @@ class Road:
 
     # line_height is the height of the line (line width == lane_width)
     def calculate_stop_line(self, line_height):
-        size = 216 # HARDCODED  != OK
-        lane_width = 8 # HARDCODED  != OK
+        size = 216  # HARDCODED  != OK
+        lane_width = 8  # HARDCODED  != OK
 
         x = self.start_location[0]
         y = self.start_location[1]
@@ -51,7 +53,8 @@ class Road:
         return x, y
 
     def spawn_car(self, unique_id):
-        next_direction = np.random.choice([Direction.EAST, Direction.NORTH, Direction.WEST, Direction.SOUTH], p=self.p_next_directions)
+        next_direction = np.random.choice([Direction.EAST, Direction.NORTH, Direction.WEST, Direction.SOUTH],
+                                          p=self.p_next_directions)
 
         # TODO: Add different velocities by increasing the sigma
         velocity = int(random.gauss(self.max_speed, 0))
@@ -92,6 +95,28 @@ class Road:
                 break
 
         self.free_space = free
+
+    def car_at_stopline(self):
+        x, y = self.stop_line_pos
+
+        positions = []
+        if self.direction == Direction.EAST:
+            positions = [[x - a, y] for a in range(10)]
+        elif self.direction == Direction.NORTH:
+            positions = [[x, y - a] for a in range(10)]
+        elif self.direction == Direction.WEST:
+            positions = [[x + a, y] for a in range(10)]
+        elif self.direction == Direction.SOUTH:
+            positions = [[x, y + a] for a in range(10)]
+
+        for position in positions:
+            agents = self.model.grid.get_neighbors(position, True, include_center=True, radius=0)
+
+            for agent in agents:
+                if type(agent) == Car:
+                    return agent
+
+        return None
 
     def step(self):
         if random.random() <= self.p_car_spawn:
