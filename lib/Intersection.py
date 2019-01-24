@@ -14,8 +14,11 @@ class Intersection(Model):
     def __init__(self, **args):
         # @TODO: can/should be made different on different roads
         super().__init__()
+        self.parameters = []
         for field in args:
             setattr(self, field, args[field])
+            self.parameters.append(field)
+
 
         self.roads = []
         self.create_roads()
@@ -353,30 +356,3 @@ def rotate_trafficlights(intersection):
     directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
     for direction in directions:
         intersection.is_locked_section[direction] = (direction != green_light_direction)
-
-# model = Intersection(
-#     max_speed_horizontal=10,
-#     max_speed_vertical=10,
-#     a_factor=.05,
-#     p_car_spawn_north=0.5,
-#     p_north_to_north=0.10,
-#     p_north_to_west=0.24,
-#     p_north_to_east=0.33,
-#     p_north_to_south=0.33,
-#     p_car_spawn_west=0.0,
-#     p_west_to_north=0.0,
-#     p_west_to_west=1.0,
-#     p_west_to_east=0.0,
-#     p_west_to_south=0.0,
-#     p_car_spawn_east=0.0,
-#     p_east_to_north=0.0,
-#     p_east_to_west=0.0,
-#     p_east_to_east=1.0,
-#     p_east_to_south=0.0,
-#     p_car_spawn_south=0.0,
-#     p_south_to_north=0.0,
-#     p_south_to_west=0.0,
-#     p_south_to_east=0.0,
-#     p_south_to_south=1.0,
-# )
-# model.run_model(100)
