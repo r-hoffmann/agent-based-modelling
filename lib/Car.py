@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 from mesa import Agent
 
@@ -53,7 +54,6 @@ class Car(Agent):
         self.velocity = velocity
         self.acceleration = acceleration
         self.bmw_factor = bmw_factor
-        self.length = 8
         self.width = 4
         self.following_vehicle = None
 
@@ -65,6 +65,39 @@ class Car(Agent):
         self.turn_type = self.get_turn_type()
 
         self.wait_counter = 0
+
+
+        # idm
+        self.desired_velocity = 30
+        self.safe_time_headway = 10
+        self.maximum_acceleration = 0.73
+        self.comfortable_deceleration = 1.67
+        self.acceleration_component = 4
+        self.minimum_distance = 2
+        self.length = 8
+
+        # self.previous_velocity = self.velocity
+        # self.previous_pos = self.pos
+
+
+
+    def hallo(self):
+        v_alpha = self.maximum_acceleration * (1 - np.power(self.velocity / self.desired_velocity, self.acceleration_component))
+
+        if self.following_vehicle is not None:
+            s_alpha = self.subtract_pos(self.following_vehicle) - self.following_vehicle.length
+
+            s_star = self.minimum_distance + self.velocity * self.safe_time_headway + (self.velocity * (self.velocity - self.following_vehicle.velocity)) / 2 * np.sqrt(self.maximum_acceleration * self.comfortable_deceleration)
+            v_alpha += (-self.maximum_acceleration * np.power(s_star / s_alpha, 2))
+
+        return int(np.ceil(v_alpha))
+
+    def subtract_pos(self, following):
+        if self.current_direction == Direction.NORTH or self.current_direction == Direction.SOUTH:
+            return np.abs(following.pos[1] - self.pos[1])
+        elif self.current_direction == Direction.WEST or self.current_direction == Direction.EAST:
+            return np.abs(following.pos[0] - self.pos[0])
+
 
     ''' Getters '''
 
@@ -187,15 +220,14 @@ class Car(Agent):
         stop_distance = self.calculate_stop_distance(velocity)
 
         # if nearing other vehicle
-        brake_because_vehicle = self.approaching_another_vehicle(stop_distance)
+        # brake_because_vehicle = self.approaching_another_vehicle(stop_distance)
 
         # if nearing intersection
         brake_because_intersection = self.approaching_intersection(stop_distance)
-        return brake_because_vehicle or brake_because_intersection
+        return brake_because_intersection
 
     def should_accelerate(self):
-        return self.velocity < self.road.max_speed and not self.should_brake(
-            min(self.velocity + self.acceleration, self.road.max_speed)) and not self.is_at_intersection()
+        return True
 
     def get_braking_speed(self):
         stop_distance = self.calculate_stop_distance(self.velocity)
@@ -457,7 +489,7 @@ class Car(Agent):
                     self.stop_step = self.model.schedule.steps
                     self.road.first = self
                 elif self.road.first == self:
-                    if self.model.priority_queue[self] or self.equivalent_can_cross():
+                    if self in self.model.priority_queue and self.model.priority_queue[self] or self.equivalent_can_cross():
                         if self.can_turn():
                             self.turning = True
                             self.road.first = None
@@ -467,6 +499,7 @@ class Car(Agent):
                 else:
                     self.move()
         else:
+            print(self.pos,)
             if self.current_direction == Direction.EAST:
                 if self.pos[0] + self.velocity >= self.model.size:
                     self.remove_car(self)
@@ -487,6 +520,8 @@ class Car(Agent):
                     self.remove_car(self)
                 else:
                     self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
+            print(self.pos)
+            
 
     def remove_car(self, agent):
         self.finish_step = self.model.schedule.steps

@@ -6,7 +6,7 @@ class Action:
         self.car.velocity = max(goal_speed, self.car.velocity - self.car.get_braking_speed())
     
     def accelerate(self):
-        self.car.velocity = min(self.car.velocity + self.car.acceleration, self.car.road.max_speed)
+        self.car.velocity = min(self.car.velocity + self.car.hallo(), self.car.road.max_speed)
 
     def turn(self):
         pass
