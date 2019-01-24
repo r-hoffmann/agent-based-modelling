@@ -1,22 +1,29 @@
-from mesa import Agent
 import math
-import numpy as np
+
+from mesa import Agent
+
+from lib.Action import Action
 from lib.Direction import Direction
 from lib.Turn import Turn
-from lib.Action import Action
 
 SECTIONS_TO_LOCK = dict()
 
-SECTIONS_TO_LOCK[Direction.NORTH] = [Direction.SOUTH_EAST, Direction.NORTH_EAST, Direction.NORTH_WEST, Direction.SOUTH_WEST]
+SECTIONS_TO_LOCK[Direction.NORTH] = [Direction.SOUTH_EAST, Direction.NORTH_EAST, Direction.NORTH_WEST,
+                                     Direction.SOUTH_WEST]
 
-SECTIONS_TO_LOCK[Direction.WEST] = [Direction.NORTH_EAST, Direction.NORTH_WEST, Direction.SOUTH_WEST, Direction.SOUTH_EAST]
+SECTIONS_TO_LOCK[Direction.WEST] = [Direction.NORTH_EAST, Direction.NORTH_WEST, Direction.SOUTH_WEST,
+                                    Direction.SOUTH_EAST]
 
-SECTIONS_TO_LOCK[Direction.EAST] = [Direction.SOUTH_WEST, Direction.SOUTH_EAST, Direction.NORTH_EAST, Direction.NORTH_WEST]
+SECTIONS_TO_LOCK[Direction.EAST] = [Direction.SOUTH_WEST, Direction.SOUTH_EAST, Direction.NORTH_EAST,
+                                    Direction.NORTH_WEST]
 
-SECTIONS_TO_LOCK[Direction.SOUTH] = [Direction.NORTH_WEST, Direction.SOUTH_WEST, Direction.SOUTH_EAST, Direction.NORTH_EAST]
+SECTIONS_TO_LOCK[Direction.SOUTH] = [Direction.NORTH_WEST, Direction.SOUTH_WEST, Direction.SOUTH_EAST,
+                                     Direction.NORTH_EAST]
+
 
 class Car(Agent):
-    def __init__(self, unique_id, model, road, location, initial_direction, next_direction, velocity, acceleration, bmw_factor, start_step):
+    def __init__(self, unique_id, model, road, location, initial_direction, next_direction, velocity, acceleration,
+                 bmw_factor, start_step):
         """
         :param unique_id: the id of the car
         :param model: the intersection model the car is on
@@ -29,7 +36,7 @@ class Car(Agent):
         """
         super().__init__(unique_id, model)
 
-        self.id = unique_id # for debugging
+        self.id = unique_id  # for debugging
 
         self.model = model
         self.action = Action(self)
@@ -59,9 +66,10 @@ class Car(Agent):
 
         self.wait_counter = 0
 
-    ''' Getters '''   
+    ''' Getters '''
+
     # # Builds the priority queue for every first car in line to determine which car should go first
-    # # @TODO: add BMW factor into decision making 
+    # # @TODO: add BMW factor into decision making
     # def get_priority_queue(self):
     #     first_cars = []
     #     for r in self.model.roads:
@@ -78,7 +86,7 @@ class Car(Agent):
     #     return k
 
     # Defines the type of turn a car is going to make at the intersection
-    def get_turn_type(self):   
+    def get_turn_type(self):
         if Direction(self.next_direction).is_opposite(self.initial_direction):
             return Turn.U
         elif Direction(self.next_direction).is_equal(self.current_direction):
@@ -107,8 +115,9 @@ class Car(Agent):
             raise ValueError('Unknown turn type')
 
     ''' ... '''
+
     # Calculate stop distance based on https://www.autoexamens.nl/remweg-berekenen/
-    def calculate_stop_distance(self, velocity):        
+    def calculate_stop_distance(self, velocity):
         return math.ceil(velocity / 10 * 3 + (velocity / 10) ** 2)
 
     def approaching_another_vehicle(self, stop_distance):
@@ -185,7 +194,8 @@ class Car(Agent):
         return brake_because_vehicle or brake_because_intersection
 
     def should_accelerate(self):
-        return self.velocity < self.road.max_speed and not self.should_brake(min(self.velocity + self.acceleration, self.road.max_speed)) and not self.is_at_intersection()
+        return self.velocity < self.road.max_speed and not self.should_brake(
+            min(self.velocity + self.acceleration, self.road.max_speed)) and not self.is_at_intersection()
 
     def get_braking_speed(self):
         stop_distance = self.calculate_stop_distance(self.velocity)
@@ -193,7 +203,7 @@ class Car(Agent):
 
     # Determine wheter car is at intersection (either on the crossing or waiting at the stopline)
     def is_at_intersection(self):
-        tl, br =  self.model.intersection_corners
+        tl, br = self.model.intersection_corners
         tl_x = tl[0]
         tl_y = tl[1]
         br_x = br[0]
@@ -224,7 +234,8 @@ class Car(Agent):
 
         return False
 
-    ''' Directions a car can move to at the intersection ''' 
+    ''' Directions a car can move to at the intersection '''
+
     def move(self):
         if not self.turning:
             self.intersection_move_ahead()
@@ -253,7 +264,7 @@ class Car(Agent):
 
     def turn_finished(self):
         self.turning = False
-        if self.model.intersection_type == 'Fourway':
+        if self.model.intersection_type == 'Fourway' or self.model.intersection_type == 'Equivalent':
             self.model.unlock_section(SECTIONS_TO_LOCK[self.initial_direction][self.turn_type - 1], self)
         self.move()
         self.turn_step = 0
@@ -275,7 +286,6 @@ class Car(Agent):
             self.intersection_step_direction(direction=self.current_direction)
         else:
             self.turn_finished()
-
 
     # Take a long turn
     def intersection_long_turn(self):
@@ -342,7 +352,7 @@ class Car(Agent):
             self.wait_counter -= 1
 
     def lock_turn(self):
-        if self.model.intersection_type == 'Fourway':
+        if self.model.intersection_type == 'Fourway' or self.model.intersection_type == 'Equivalent':
             sections_to_lock = SECTIONS_TO_LOCK[self.initial_direction][self.turn_step:self.turn_type]
             self.model.lock_sections(sections_to_lock, self)
             if self.turn_step > 0:
@@ -353,7 +363,38 @@ class Car(Agent):
         turn = SECTIONS_TO_LOCK[self.initial_direction][:self.turn_type]
         return not self.model.turn_is_locked(turn)
 
+    def rightmost_car_that_could_cross(self):
+        direction = (int(self.initial_direction) + 4) % 8
+
+        for i in [2, 4, 6]:
+            car = self.model.car_per_stopline[Direction((direction + i) % 8)]
+            if car and car.can_turn() and not self.model.priority_queue[car]:
+                return car
+
+        return None
+
+    def paths_cross(self, other_car):
+        my_path = SECTIONS_TO_LOCK[self.initial_direction][:self.turn_type]
+        other_path = SECTIONS_TO_LOCK[other_car.initial_direction][:other_car.turn_type]
+
+        for section in my_path:
+            if section in other_path:
+                return True
+
+        return False
+
+    def equivalent_can_cross(self):
+        # Make sure it won't cross paths with any cars that have priority
+        for direction, car in self.model.car_per_stopline.items():
+            if car is not None and car != self and self.model.priority_queue[car] and self.paths_cross(car):
+                return False
+
+        other_car = self.rightmost_car_that_could_cross()
+
+        return other_car is None or not self.paths_cross(other_car)
+
     ''' Framework functions '''
+
     def advance(self):
         if self.should_brake(self.velocity):
             goal_speed = 0
@@ -408,6 +449,22 @@ class Car(Agent):
                     self.turning = True
                     self.move()
                 if self.turn_completed:
+                    self.move()
+            elif self.model.intersection_type == 'Equivalent':
+                # ik sta stil maar wacht minstens 1 tijdstap
+                # set stop counter when car first arrives at the stopline
+                if self.stop_step == 0:
+                    self.stop_step = self.model.schedule.steps
+                    self.road.first = self
+                elif self.road.first == self:
+                    if self.model.priority_queue[self] or self.equivalent_can_cross():
+                        if self.can_turn():
+                            self.turning = True
+                            self.road.first = None
+                            self.move()
+
+                # while at intersection
+                else:
                     self.move()
         else:
             if self.current_direction == Direction.EAST:
