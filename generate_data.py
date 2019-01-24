@@ -3,16 +3,18 @@ from lib.Intersection import Intersection
 from itertools import product
 
 from_0_to_1 = [x / 10.0 for x in [1]]
+from_1_to_10 = range(1, 2)
+speeds = range(3, 6, 3)
 
 parameters =  {
-    'max_speed_horizontal': range(3, 16, 3),
-    'max_speed_vertical': range(3, 16, 3),
+    'max_speed_horizontal': speeds,
+    'max_speed_vertical': speeds,
     'alpha_factor': from_0_to_1,
     'beta_factor': from_0_to_1,
-    't_from_north': range(1, 10),
-    't_from_west': range(1, 10),
-    't_from_east': range(1, 10),
-    't_from_south': range(1, 10),
+    't_from_north': from_1_to_10,
+    't_from_west': from_1_to_10,
+    't_from_east': from_1_to_10,
+    't_from_south': from_1_to_10,
     'intersection_type': ['Traffic lights', 'Fourway', 'Equivalent'],
     'p_car_spawn_north': from_0_to_1,
     'p_north_to_north': from_0_to_1,
