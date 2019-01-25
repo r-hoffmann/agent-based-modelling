@@ -54,7 +54,7 @@ def model_for_sensitivity(alpha_factor,beta_factor,p_spawn,intersection_type):
 	df2 = model.throughput.get_model_vars_dataframe()
 	average_throughput = sum(df2.values)/len(df2.values)
 	print(average_throughput)
-	return average_throughput[0]
+	return df2.values[-1]
 
 
 # Generate parameters
