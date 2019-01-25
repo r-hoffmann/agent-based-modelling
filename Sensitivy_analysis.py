@@ -2,6 +2,8 @@ from lib.Intersection import Intersection
 from SALib.sample import saltelli
 from SALib.analyze import sobol
 import numpy as np
+import pandas as pd
+import csv
 
 problem = {
     'num_vars': 4,
@@ -53,22 +55,41 @@ def model_for_sensitivity(alpha_factor,beta_factor,p_spawn,intersection_type):
 	model.throughput.collect(model)
 	df2 = model.throughput.get_model_vars_dataframe()
 	average_throughput = sum(df2.values)/len(df2.values)
-	print(average_throughput)
-	return df2.values[-1]
+	#print(df2.values[-1][-1])
+	return df2.values[-1][-1]
 
 
 # Generate parameters
-param_values = saltelli.sample(problem, 100)
+param_values = saltelli.sample(problem, 200)
 
 # generate output:
 Y = np.zeros([param_values.shape[0]])
+print('total number of runs: ',len(Y))
 
 for i, X in enumerate(param_values):
     Y[i] = model_for_sensitivity(X[0],X[1],X[2],X[3])
+    print('run number: ',i, 'model outpu : ', Y[i])
 
 Si = sobol.analyze(problem, Y)
 
-print(Si)
-print('First order sensitivity indices : ', Si['S1'])
-print('Second order sensitivity indices : ', Si['ST'])
-print('Interaction sensitivity indices : ', Si['S2'])
+print('First order sensitivity indices :')
+print( Si['S1'])
+print('Second order sensitivity indices :')
+print( Si['ST'])
+print('Interaction sensitivity indices :')
+print( Si['S2'])
+
+interaction = Si.pop('S2', None)
+conf_interaciton = Si.pop('S2_conf', None)
+
+df = pd.DataFrame.from_dict(Si)
+df.to_csv('data/first_and_second_order_sensitivity_results.csv')
+
+df = pd.DataFrame(interaction)
+df.to_csv('data/interaction_sensitivity_results.csv')
+
+df = pd.DataFrame(conf_interaciton)
+df.to_csv('data/Confidence_interva_interaction_sensitivity_results.csv')
+
+
+
