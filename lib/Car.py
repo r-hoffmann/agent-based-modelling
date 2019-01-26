@@ -335,14 +335,15 @@ class Car(Agent):
         if not self.turning:
             self.intersection_move_ahead()
         else:
-            if self.turn_type == Turn.STRAIGHT:
-                self.intersection_straight()
-            elif self.turn_type == Turn.LONG:
-                self.intersection_long_turn()
-            elif self.turn_type == Turn.U:
-                self.intersection_u_turn()
-            elif self.turn_type == Turn.SHORT:
-                self.intersection_short_turn()
+            self.intersection_turn()
+            # if self.turn_type == Turn.STRAIGHT:
+            #     self.intersection_straight()
+            # elif self.turn_type == Turn.LONG:
+            #     self.intersection_long_turn()
+            # elif self.turn_type == Turn.U:
+            #     self.intersection_u_turn()
+            # elif self.turn_type == Turn.SHORT:
+            #     self.intersection_short_turn()
 
     # Move straight ahead
     def intersection_move_ahead(self):
@@ -364,60 +365,63 @@ class Car(Agent):
         self.turn_step = 0
         self.turn_completed = True
 
-    # Take a short turn
-    def intersection_short_turn(self):
+    # # Take a short turn
+    # def intersection_short_turn(self):
+    #     self.intersection_move()
+    #
+    #     if self.turn_step in [0, 1]:
+    #         self.lock_turn(from_section=0)
+    #     else:
+    #         self.turn_finished()
+    #
+    # def intersection_straight(self):
+    #     self.intersection_move()
+    #
+    #     if self.turn_step in [0, 1]:
+    #         self.lock_turn(from_section=0)
+    #     elif self.turn_step == 2:
+    #         self.lock_turn(from_section=1)
+    #     else:
+    #         self.turn_finished()
+    #
+    # # Take a long turn
+    # def intersection_long_turn(self):
+    #     self.intersection_move()
+    #
+    #     if self.turn_step in [0, 1]:
+    #         self.lock_turn(from_section=0)
+    #     elif self.turn_step == 2:
+    #         self.lock_turn(from_section=1)
+    #     elif self.turn_step == 3:
+    #         self.lock_turn(from_section=2)
+    #     else:
+    #         self.turn_finished()
+    #
+    # # Take a u turn
+    # def intersection_u_turn(self):
+    #     self.intersection_move()
+    #
+    #     if self.turn_step > 4:
+    #         self.turn_finished()
+
+    def intersection_turn(self):
         self.intersection_move()
 
-        if self.turn_step in [0, 1]:
-            self.lock_turn(from_section=0)
-        else:
-            self.turn_finished()
-
-    def intersection_straight(self):
-        self.intersection_move()
-
-        if self.turn_step in [0, 1]:
-            self.lock_turn(from_section=0)
-        elif self.turn_step == 2:
-            self.lock_turn(from_section=1)
-        else:
-            self.turn_finished()
-
-    # Take a long turn
-    def intersection_long_turn(self):
-        self.intersection_move()
-
-        if self.turn_step in [0, 1]:
-            self.lock_turn(from_section=0)
-        elif self.turn_step == 2:
-            self.lock_turn(from_section=1)
-        elif self.turn_step == 3:
-            self.lock_turn(from_section=2)
-        else:
-            self.turn_finished()
-
-    # Take a u turn
-    def intersection_u_turn(self):
-        self.intersection_move()
-
-        if self.turn_step in [0, 1]:
-            self.lock_turn(from_section=0)
-        elif self.turn_step == 2:
-            self.lock_turn(from_section=1)
-        elif self.turn_step == 3:
-            self.lock_turn(from_section=2)
-        elif self.turn_step == 4:
-            self.lock_turn(from_section=3)
-        else:
+        if self.turn_step > self.turn_type:
             self.turn_finished()
 
     def next_turn_step(self):
         self.turn_step += 1
-        self.intersection_turn()
+        self.turn_car()
+
+        from_section = self.turn_step - 1
+        if from_section < 0:
+            from_section = 0
+        self.lock_turn(from_section)
 
     def intersection_move(self):
         if int(self.current_direction) % 2 != 0:
-            self.intersection_turn()
+            self.turn_car()
 
         self.action.accelerate(self.turn_acceleration())
 
@@ -466,7 +470,7 @@ class Car(Agent):
     def turn_right(self):
         self.current_direction = Direction((int(self.current_direction) - 1) % 8)
 
-    def intersection_turn(self):
+    def turn_car(self):
         if self.turn_type == Turn.SHORT and self.turn_step == 1:
             self.turn_right()
         elif self.turn_type == Turn.LONG and self.turn_step == 2:
@@ -570,6 +574,7 @@ class Car(Agent):
                     if first == self and self.can_turn():
                         self.turning = True
                         self.road.first = None
+                        self.lock_turn(0)
                         self.move()
                 # while at intersection
                 else:
