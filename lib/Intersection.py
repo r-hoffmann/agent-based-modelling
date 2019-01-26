@@ -90,18 +90,16 @@ class Intersection(Model):
     def lock_sections(self, directions, car):
         for direction in directions:
             if not self.locked_by[direction] in [None, car]:
-                raise Exception(
-                    'Car tries to lock section which is not his. {} != {}'.format(self.locked_by[direction], car))
+                raise Exception('Car tries to lock section which is not his. ' + str(self.locked_by[direction]) + ' != ' + str(car))
             self.is_locked_section[direction] = True
             self.locked_by[direction] = car
 
     def unlock_section(self, direction, car):
-        if self.locked_by[direction] == car:
+        if self.locked_by[direction] in [None, car]:
             self.is_locked_section[direction] = False
             self.locked_by[direction] = None
         else:
-            raise Exception(
-                'Car tries to unlock section which is not his. {} != {}'.format(self.locked_by[direction], car))
+            raise Exception('Car tries to unlock section which is not his. ' + str(self.locked_by[direction]) + ' != ' + str(car))
 
     def get_intersection_corners(self):
         lane_width = 8
