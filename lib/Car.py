@@ -596,6 +596,7 @@ class Car(Agent):
                         if self.can_turn():
                             self.turning = True
                             self.road.first = None
+                            self.lock_turn(0)
                             self.move()
 
                 # while at intersection
