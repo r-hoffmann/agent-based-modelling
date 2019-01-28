@@ -98,18 +98,16 @@ class Intersection(Model):
     def lock_sections(self, directions, car):
         for direction in directions:
             if not self.locked_by[direction] in [None, car]:
-                raise Exception(
-                    'Car tries to lock section which is not his. {} != {}'.format(self.locked_by[direction], car))
+                raise Exception('Car tries to lock section which is not his. ' + str(self.locked_by[direction]) + ' != ' + str(car))
             self.is_locked_section[direction] = True
             self.locked_by[direction] = car
 
     def unlock_section(self, direction, car):
-        if self.locked_by[direction] == car:
+        if self.locked_by[direction] in [None, car]:
             self.is_locked_section[direction] = False
             self.locked_by[direction] = None
         else:
-            raise Exception(
-                'Car tries to unlock section which is not his. {} != {}'.format(self.locked_by[direction], car))
+            raise Exception('Car tries to unlock section which is not his. ' + str(self.locked_by[direction]) + ' != ' + str(car))
 
     def get_intersection_corners(self):
         lane_width = 8
@@ -385,7 +383,7 @@ def rotate_trafficlights(intersection):
     from_south = intersection.t_from_south
 
     # 4 * 3 is margin between traffic lights "Orange light"
-    total = from_north + from_west + from_east + from_south + 4 * 3
+    total = from_north + from_west + from_east + from_south + 4 * 10
 
     current_step = intersection.schedule.steps
 
@@ -393,11 +391,11 @@ def rotate_trafficlights(intersection):
     green_light_direction = None
     if current_place_in_rotation < from_north:
         green_light_direction = Direction.SOUTH
-    elif from_north + 3 <= current_place_in_rotation < from_north + from_east + 3:
+    elif from_north + 10 <= current_place_in_rotation < from_north + from_east + 10:
         green_light_direction = Direction.WEST
-    elif from_north + from_east + 6 <= current_place_in_rotation < from_north + from_east + from_south + 6:
+    elif from_north + from_east + 20 <= current_place_in_rotation < from_north + from_east + from_south + 20:
         green_light_direction = Direction.NORTH
-    elif from_north + from_east + from_south + 9 <= current_place_in_rotation < from_north + from_east + from_south + from_west + 9:
+    elif from_north + from_east + from_south + 30 <= current_place_in_rotation < from_north + from_east + from_south + from_west + 30:
         green_light_direction = Direction.EAST
 
     directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]

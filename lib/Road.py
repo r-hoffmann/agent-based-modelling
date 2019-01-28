@@ -27,28 +27,28 @@ class Road:
 
         self.first = None
 
-        self.stop_line_pos = self.calculate_stop_line(1)
+        self.line_height = 3
+        self.stop_line_pos = self.calculate_stop_line()
 
         self.p_next_directions = np.array(p_next_directions) / sum(p_next_directions)
 
         self.alpha_factor, self.beta_factor = social_factors
 
     # line_height is the height of the line (line width == lane_width)
-    def calculate_stop_line(self, line_height):
+    def calculate_stop_line(self):
         size = 216  # HARDCODED  != OK
-        lane_width = 8  # HARDCODED  != OK
 
         x = self.start_location[0]
         y = self.start_location[1]
 
         if self.direction == Direction.NORTH:
-            y = y + size // 2 - lane_width - line_height
+            y = y + size // 2 - self.line_height
         elif self.direction == Direction.SOUTH:
-            y = y - size // 2 + lane_width + line_height
+            y = y - size // 2 + self.line_height
         elif self.direction == Direction.WEST:
-            x = x - size // 2 + lane_width + line_height
+            x = x - size // 2 + self.line_height
         elif self.direction == Direction.EAST:
-            x = x + size // 2 - lane_width - line_height
+            x = x + size // 2 - self.line_height
 
         return x, y
 
