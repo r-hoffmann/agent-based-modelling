@@ -4,6 +4,9 @@ from SALib.analyze import sobol
 import numpy as np
 import pandas as pd
 import csv
+import time
+
+from tqdm import tqdm
 
 problem = {
     'num_vars': 4,
@@ -66,9 +69,15 @@ param_values = saltelli.sample(problem, 200)
 Y = np.zeros([param_values.shape[0]])
 print('total number of runs: ',len(Y))
 
-for i, X in enumerate(param_values):
-    Y[i] = model_for_sensitivity(X[0],X[1],X[2],X[3])
-    print('run number: ',i, 'model outpu : ', Y[i])
+for i, X in tqdm(enumerate(param_values)):
+	t0 = time.time()
+	Y[i] = model_for_sensitivity(X[0],X[1],X[2],X[3])
+
+	if i == 5:
+		t1 = time.time()
+		estimated_time = len(Y) * (t1-t0)
+		print('estimated time for analysis : ',estimated_time)
+	print('model output : ', Y[i])
 
 Si = sobol.analyze(problem, Y)
 
