@@ -305,22 +305,22 @@ class Car(Agent):
 
         if self.current_direction == Direction.EAST:
             x += self.velocity
-            if x > section_x:
+            if x + 2 >= section_x:
                 x = section_x
                 self.next_turn_step()
         elif self.current_direction == Direction.NORTH:
             y += self.velocity
-            if y > section_y:
+            if y + 2 >= section_y:
                 y = section_y
                 self.next_turn_step()
         elif self.current_direction == Direction.WEST:
             x -= self.velocity
-            if x < section_x:
+            if x - 2 <= section_x:
                 x = section_x
                 self.next_turn_step()
         elif self.current_direction == Direction.SOUTH:
             y -= self.velocity
-            if y < section_y:
+            if y - 2 <= section_y:
                 y = section_y
                 self.next_turn_step()
 
