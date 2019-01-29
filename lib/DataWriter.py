@@ -35,7 +35,7 @@ class DataWriter:
         create_parameters_table = '''CREATE TABLE parameters
             (id INTEGER PRIMARY KEY, run_id, parameter_name, parameter_value)'''
         create_results_table = '''CREATE TABLE results
-            (id INTEGER PRIMARY KEY, run_id, average_speed, throughput, number_of_waiting_cars)'''
+            (id INTEGER PRIMARY KEY, run_id, average_speed, throughput, number_of_waiting_cars, mean_crossover_time)'''
         
         conn = sqlite3.connect(self.database_filename)
         conn.execute(create_runs_table)
@@ -63,7 +63,7 @@ class DataWriter:
 
         # Results
         conn.executemany(
-            '''INSERT INTO results(run_id, average_speed, throughput, number_of_waiting_cars) VALUES ({}, ?, ?, ?)'''.format(run_id), 
+            '''INSERT INTO results(run_id, average_speed, throughput, number_of_waiting_cars, mean_crossover_time) VALUES ({}, ?, ?, ?, ?)'''.format(run_id), 
             results.values)
         conn.commit()
         print("Inserted run with id {}".format(run_id))
@@ -80,6 +80,7 @@ class DataWriter:
             self.read_database(run_id)
 
     def read_database(self, run_id):
+        run_id = (run_id,)
         data = dict()
         conn = sqlite3.connect(self.database_filename)
 
@@ -89,12 +90,41 @@ class DataWriter:
 
         cur = conn.cursor()
         cur.execute('''SELECT * FROM results WHERE run_id = ?''', run_id)
-        data['results'] = cur.fetchall()
+        results = cur.fetchall()
+        data['results'] = dict()
+        data['results']['average_speed'] = [row[2] for row in results]
+        data['results']['throughput'] = [row[3] for row in results]
+        data['results']['number_of_waiting_cars'] = [row[4] for row in results]
+        data['results']['mean_crossover_time'] = [row[5] for row in results]
 
         cur = conn.cursor()
         cur.execute('''SELECT * FROM parameters WHERE run_id = ?''', run_id)
         data['parameters'] = cur.fetchall()
+        conn.close()
         return data
+
+    def get_runs_by_parameters(self, parameters):
+        conn = sqlite3.connect(self.database_filename)
+        cur = conn.cursor()
+        first = True
+        sql = ''
+        for parameter in parameters:
+            if first:
+                first = False
+            else:
+                sql += ''' INTERSECT '''
+            sql += '''SELECT run_id FROM parameters
+                     WHERE parameter_name=\'{}\' AND parameter_value LIKE \'{}\''''.format(parameter, parameters[parameter])
+        print(sql)
+        cur.execute(sql)
+        run_ids = cur.fetchone()
+        if run_ids == None:
+            raise Exception('No run fournd with these parameters')
+        else:
+            print('Found run ids: {}'.format(run_ids))
+
+        return self.read_database(run_ids[0])
+
 
     def run(self, n=1000):
         self.intersection.run_model(n)
@@ -102,10 +132,10 @@ class DataWriter:
         df1 = self.intersection.average_speed.get_model_vars_dataframe()
         self.intersection.throughput.collect(self.intersection)
         df2 = self.intersection.throughput.get_model_vars_dataframe()
-        self.intersection.mean_crossover.collect(self.intersection)
-        self.intersection.mean_crossover_hist.collect(self.intersection)
         self.intersection.waiting_cars.collect(self.intersection)
         df3 = self.intersection.waiting_cars.get_model_vars_dataframe()
-        df = pd.DataFrame([df1.iloc[:,0], df2.iloc[:,0], df3.iloc[:,0]])
+        self.intersection.mean_crossover.collect(self.intersection)
+        df4 = self.intersection.mean_crossover.get_model_vars_dataframe()
+        df = pd.DataFrame([df1.iloc[:,0], df2.iloc[:,0], df3.iloc[:,0], df4.iloc[:,0]])
         data = df.transpose()
         self.write(data)
