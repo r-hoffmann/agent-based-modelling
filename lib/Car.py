@@ -1,4 +1,3 @@
-import math
 import numpy as np
 
 from mesa import Agent
@@ -50,7 +49,7 @@ SECTION_LOCATIONS = {
 
 class Car(Agent):
     def __init__(self, unique_id, model, road, location, initial_direction, next_direction, velocity, acceleration,
-                 bmw_factor, start_step):
+                 bmw_factor, start_step, desired_speed, maximum_acceleration, comfortable_deceleration):
         """
         :param unique_id: the id of the car
         :param model: the intersection model the car is on
@@ -92,17 +91,17 @@ class Car(Agent):
 
         self.wait_counter = 0
 
-
         # idm
+        self.desired_speed = desired_speed
         self.safe_time_headway = 1.5
-        self.maximum_acceleration = 1
-        self.comfortable_deceleration = 2
+        self.maximum_acceleration = maximum_acceleration
+        self.comfortable_deceleration = comfortable_deceleration
         self.acceleration_component = 4
         self.minimum_distance = 2
         self.length = 8
 
     def idm_acceleration(self):
-        v_alpha = self.maximum_acceleration * (1 - np.power(self.velocity / self.road.max_speed, self.acceleration_component))
+        v_alpha = self.maximum_acceleration * (1 - np.power(self.velocity / self.desired_speed, self.acceleration_component))
 
         incoming_object = self.next_object()
 
@@ -305,22 +304,22 @@ class Car(Agent):
 
         if self.current_direction == Direction.EAST:
             x += self.velocity
-            if x > section_x:
+            if x + 2 >= section_x:
                 x = section_x
                 self.next_turn_step()
         elif self.current_direction == Direction.NORTH:
             y += self.velocity
-            if y > section_y:
+            if y + 2 >= section_y:
                 y = section_y
                 self.next_turn_step()
         elif self.current_direction == Direction.WEST:
             x -= self.velocity
-            if x < section_x:
+            if x - 2 <= section_x:
                 x = section_x
                 self.next_turn_step()
         elif self.current_direction == Direction.SOUTH:
             y -= self.velocity
-            if y < section_y:
+            if y - 2 <= section_y:
                 y = section_y
                 self.next_turn_step()
 
@@ -416,20 +415,30 @@ class Car(Agent):
 
                     if len(first_cars) == 1:
                         first = first_cars[0]
-                    # if multiple cars come in, the one with the lowest bmw factor take priority
+
+                    # If 2 cars arrive at the same time the right one has priority
+                    elif len(first_cars) == 2 and (first_cars[0].current_direction - first_cars[1].current_direction) % 8 in [2, 6]:
+                        if (first_cars[0].current_direction - first_cars[1].current_direction) % 8 == 2:
+                            first = first_cars[1]
+                        else:
+                            first = first_cars[0]
+
+                    # If multiple cars come in, the one with the highest bmw factor takes priority
                     else:
                         tmp2 = {}
 
                         for car in first_cars:
                             tmp2[car] = car.bmw_factor
 
-                        first = min(tmp2, key=tmp2.get)
+                        first = max(tmp2, key=tmp2.get)
+
                     # Car can move
                     if first == self and self.can_turn():
                         self.turning = True
                         self.road.first = None
                         self.lock_turn(0)
                         self.move()
+
                 # while at intersection
                 else:
                     self.move()

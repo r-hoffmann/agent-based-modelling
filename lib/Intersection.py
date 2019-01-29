@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+
 from mesa import Model
 from mesa.datacollection import DataCollector
 from mesa.space import MultiGrid
@@ -86,6 +87,26 @@ class Intersection(Model):
         self.priority_queue = None
         self.car_per_stopline = {}
 
+        if self.seed == 0:
+            self.rnd = np.random.RandomState()
+        else:
+            self.rnd = np.random.RandomState(self.seed)
+
+        self.alpha_factor = 2
+        self.beta_factor = 5
+
+        # If BMW factor of a car is bigger than this value it is a BMW
+        self.bmw_threshold = self.calculate_bmw_threshold()
+
+    def calculate_bmw_threshold(self):
+        data = np.array([np.random.beta(self.alpha_factor, self.beta_factor) for _ in range(10000)])
+
+        for x in np.arange(0, 1, 0.001):
+            if len(data[data < x]) / len(data) >= 1 - self.bmw_fraction:
+                return x
+
+        return 1
+
     def section_is_locked(self, direction):
         return self.is_locked_section[direction]
 
@@ -140,8 +161,7 @@ class Intersection(Model):
                     self.p_north_to_west,
                     self.p_north_to_south,
                 ],
-                self.max_speed_vertical,
-                (self.alpha_factor, self.beta_factor)
+                self.max_speed_vertical
             )
         )
 
@@ -157,8 +177,7 @@ class Intersection(Model):
                     self.p_west_to_west,
                     self.p_west_to_south,
                 ],
-                self.max_speed_horizontal,
-                (self.alpha_factor, self.beta_factor)
+                self.max_speed_horizontal
             )
         )
 
@@ -174,8 +193,7 @@ class Intersection(Model):
                     self.p_east_to_west,
                     self.p_east_to_south,
                 ],
-                self.max_speed_horizontal,
-                (self.alpha_factor, self.beta_factor)
+                self.max_speed_horizontal
             )
         )
 
@@ -191,8 +209,7 @@ class Intersection(Model):
                     self.p_south_to_west,
                     self.p_south_to_south,
                 ],
-                self.max_speed_vertical,
-                (self.alpha_factor, self.beta_factor)
+                self.max_speed_vertical
             )
         )
 
@@ -237,19 +254,26 @@ class Intersection(Model):
         priority_queue = {}
         for road in self.roads:
             if road.first:
-                priority_queue[road.first] = road.first.stop_step
+                if road.first.bmw_factor >= self.bmw_threshold:
+                    priority_queue[road.first] = 0
+                else:
+                    priority_queue[road.first] = road.first.stop_step
 
-        # self.priority_queue = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]     
         self.priority_queue = priority_queue
-
-        # print(self.priority_queue)
 
     def get_car_per_stopline(self):
         for road in self.roads:
             self.car_per_stopline[Direction((int(road.direction) + 4) % 8)] = road.car_at_stopline()
 
     def update_equivalent_priority_queue(self):
+        # Make sure their are cars in the priority queue
+        if len([car for car in self.car_per_stopline.values() if car]) == 0:
+            self.priority_queue = {}
+            return
+
         priority_queue = {}
+
+        # Normal rules
         for direction, car in self.car_per_stopline.items():
             if car:
                 car_to_right = self.car_per_stopline[Direction((int(direction) + 2) % 8)]
@@ -267,26 +291,36 @@ class Intersection(Model):
                 if car_across and car_across.turn_type == Turn.STRAIGHT:
                     priority_queue[car] = False
 
+        # BMW takes priority
+        highest_bmw = max([(car, car.bmw_factor) for car in self.car_per_stopline.values() if car], key=lambda x: x[1])
+        if highest_bmw[1] >= self.bmw_threshold:
+            priority_queue[highest_bmw[0]] = True
+
+            for _, car in self.car_per_stopline.items():
+                if car and car != highest_bmw[0]:
+                    priority_queue[car] = False
+
+            self.priority_queue = priority_queue
+            return
+
         # Nobody can take priority
         if len(priority_queue) > 0 and sum([1 for _, has_priority in priority_queue.items() if has_priority]) == 0:
-            # Highest BMW factor takes priority
-            priority_queue[max(priority_queue.keys(), key=(lambda k: priority_queue[k]))] = True
+            cars = [(car, car.stop_step) for car in priority_queue if car.road.first == car]
+            first_cars = [car for (car, stop_step) in cars if stop_step == min(cars, key=lambda x: x[1])[1]]
+
+            if len(first_cars) == 4:
+                # Highest BMW factor takes priority
+                priority_queue[max(priority_queue.keys(), key=(lambda k: priority_queue[k]))] = True
+
+            else:
+                for car in first_cars:
+                    car_to_right = self.car_per_stopline[Direction((int(car.current_direction) - 2) % 8)]
+
+                    if car_to_right is None or car_to_right.stop_step != car.stop_step:
+                        priority_queue[car] = True
+                        break
 
         self.priority_queue = priority_queue
-
-
-    # def update_priority_queues(self):
-    #     priority_queue = {}
-
-    #     # build priority queue
-    #     for road in self.roads:
-    #         if road.first:
-    #             priority_queue[road.first] = road.first.stop_step
-
-    #     # set priority queues            
-    #     for road in self.roads:
-    #         if road.first:
-    #             road.first.priority_queue = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]        
 
     def run_model(self, n=100):
         for _ in range(n):
@@ -382,7 +416,7 @@ def rotate_trafficlights(intersection):
     from_west = intersection.t_from_west
     from_south = intersection.t_from_south
 
-    # 4 * 3 is margin between traffic lights "Orange light"
+    # 4 * 10 is margin between traffic lights "Orange light"
     total = from_north + from_west + from_east + from_south + 4 * 10
 
     current_step = intersection.schedule.steps

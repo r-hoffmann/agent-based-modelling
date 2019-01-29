@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 
 from lib.Car import Car
@@ -7,7 +5,7 @@ from lib.Direction import Direction
 
 
 class Road:
-    def __init__(self, model, start_location, direction, p_car_spawn, p_next_directions, max_speed, social_factors):
+    def __init__(self, model, start_location, direction, p_car_spawn, p_next_directions, max_speed):
         """
         Creates a road
         :param start_location: The location of the right most cell of the right part of the road
@@ -32,8 +30,6 @@ class Road:
 
         self.p_next_directions = np.array(p_next_directions) / sum(p_next_directions)
 
-        self.alpha_factor, self.beta_factor = social_factors
-
     # line_height is the height of the line (line width == lane_width)
     def calculate_stop_line(self):
         size = 216  # HARDCODED  != OK
@@ -53,12 +49,15 @@ class Road:
         return x, y
 
     def spawn_car(self, unique_id):
-        next_direction = np.random.choice([Direction.EAST, Direction.NORTH, Direction.WEST, Direction.SOUTH],
+        next_direction = self.model.rnd.choice([Direction.EAST, Direction.NORTH, Direction.WEST, Direction.SOUTH],
                                           p=self.p_next_directions)
 
         # TODO: Add different velocities by increasing the sigma
-        velocity = int(random.gauss(self.max_speed, 0))
-        bmw_factor = np.random.beta(self.alpha_factor, self.beta_factor)
+        desired_velocity = min(15, max(5, int(np.round(self.model.rnd.normal(self.max_speed, 2)))))
+        maximum_acceleration = min(2.0, max(0.6, self.model.rnd.normal(1, 0.2)))
+        comfortable_deceleration = min(3.0, max(1.0, self.model.rnd.normal(2.0, 0.5)))
+        bmw_factor = self.model.rnd.beta(self.model.alpha_factor, self.model.beta_factor)
+
         car = Car(
             unique_id,
             self.model,
@@ -66,10 +65,13 @@ class Road:
             self.start_location,
             self.direction,
             next_direction,
-            velocity,
+            desired_velocity,
             30,
             bmw_factor,
-            self.model.schedule.steps
+            self.model.schedule.steps,
+            desired_velocity,
+            maximum_acceleration,
+            comfortable_deceleration
         )
 
         self.car_queue.insert(0, car)
@@ -101,25 +103,25 @@ class Road:
 
         positions = []
         if self.direction == Direction.EAST:
-            positions = [[x - a, y] for a in range(10)]
+            positions = [[x - a, y] for a in range(15)]
         elif self.direction == Direction.NORTH:
-            positions = [[x, y - a] for a in range(10)]
+            positions = [[x, y - a] for a in range(15)]
         elif self.direction == Direction.WEST:
-            positions = [[x + a, y] for a in range(10)]
+            positions = [[x + a, y] for a in range(15)]
         elif self.direction == Direction.SOUTH:
-            positions = [[x, y + a] for a in range(10)]
+            positions = [[x, y + a] for a in range(15)]
 
         for position in positions:
             agents = self.model.grid.get_neighbors(position, True, include_center=True, radius=0)
 
             for agent in agents:
-                if type(agent) == Car:
+                if type(agent) == Car and not agent.turning:
                     return agent
 
         return None
 
     def step(self):
-        if random.random() <= self.p_car_spawn:
+        if self.model.rnd.rand() <= self.p_car_spawn:
             self.spawn_car(len(self.model.cars))
 
         # Check whether a new car could be spawned on the road
