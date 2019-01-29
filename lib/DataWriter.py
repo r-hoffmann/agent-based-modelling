@@ -3,7 +3,7 @@ import sqlite3, os.path
 from lib.Intersection import *
 
 class DataWriter:
-    def __init__(self, intersection, root_dir='data'):
+    def __init__(self, intersection=None, root_dir='data'):
         self.intersection = intersection
         self.root_dir = root_dir
         self.database_filename = 'data/sqlite_database.db'
@@ -71,6 +71,30 @@ class DataWriter:
     
     def write_file(self, data):
         data.to_csv('{}/{}/{}'.format(self.root_dir, self.intersection.intersection_type, self.resolve_filename()).lower().replace(' ', '_'))
+
+    def read(self, run_id, source="database"):
+        if source=='file':
+            # todo
+            pass
+        else:
+            self.read_database(run_id)
+
+    def read_database(self, run_id):
+        data = dict()
+        conn = sqlite3.connect(self.database_filename)
+
+        cur = conn.cursor()
+        cur.execute('''SELECT * FROM runs WHERE id = ?''', run_id)
+        data['run'] = cur.fetchall()
+
+        cur = conn.cursor()
+        cur.execute('''SELECT * FROM results WHERE run_id = ?''', run_id)
+        data['results'] = cur.fetchall()
+
+        cur = conn.cursor()
+        cur.execute('''SELECT * FROM parameters WHERE run_id = ?''', run_id)
+        data['parameters'] = cur.fetchall()
+        return data
 
     def run(self, n=1000):
         self.intersection.run_model(n)
