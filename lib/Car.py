@@ -50,7 +50,7 @@ SECTION_LOCATIONS = {
 
 class Car(Agent):
     def __init__(self, unique_id, model, road, location, initial_direction, next_direction, velocity, acceleration,
-                 bmw_factor, start_step):
+                 bmw_factor, start_step, desired_speed, maximum_acceleration, comfortable_deceleration):
         """
         :param unique_id: the id of the car
         :param model: the intersection model the car is on
@@ -92,17 +92,17 @@ class Car(Agent):
 
         self.wait_counter = 0
 
-
         # idm
+        self.desired_speed = desired_speed
         self.safe_time_headway = 1.5
-        self.maximum_acceleration = 1
-        self.comfortable_deceleration = 2
+        self.maximum_acceleration = maximum_acceleration
+        self.comfortable_deceleration = comfortable_deceleration
         self.acceleration_component = 4
         self.minimum_distance = 2
         self.length = 8
 
     def idm_acceleration(self):
-        v_alpha = self.maximum_acceleration * (1 - np.power(self.velocity / self.road.max_speed, self.acceleration_component))
+        v_alpha = self.maximum_acceleration * (1 - np.power(self.velocity / self.desired_speed, self.acceleration_component))
 
         incoming_object = self.next_object()
 

@@ -57,8 +57,11 @@ class Road:
                                           p=self.p_next_directions)
 
         # TODO: Add different velocities by increasing the sigma
-        velocity = int(random.gauss(self.max_speed, 0))
+        desired_velocity = min(15, max(5, int(np.round(random.gauss(self.max_speed, 2)))))
+        maximum_acceleration = min(2.0, max(0.6, random.gauss(1, 0.2)))
+        comfortable_deceleration = min(3.0, max(1.0, random.gauss(2.0, 0.5)))
         bmw_factor = np.random.beta(self.alpha_factor, self.beta_factor)
+
         car = Car(
             unique_id,
             self.model,
@@ -66,10 +69,13 @@ class Road:
             self.start_location,
             self.direction,
             next_direction,
-            velocity,
+            desired_velocity,
             30,
             bmw_factor,
-            self.model.schedule.steps
+            self.model.schedule.steps,
+            desired_velocity,
+            maximum_acceleration,
+            comfortable_deceleration
         )
 
         self.car_queue.insert(0, car)
