@@ -416,14 +416,23 @@ class Car(Agent):
 
                     if len(first_cars) == 1:
                         first = first_cars[0]
-                    # if multiple cars come in, the one with the lowest bmw factor take priority
+
+                    # If 2 cars arrive at the same time the right one has priority
+                    elif len(first_cars) == 2 and (first_cars[0].current_direction - first_cars[1].current_direction) % 8 in [2, 6]:
+                        if (first_cars[0].current_direction - first_cars[1].current_direction) % 8 == 2:
+                            first = first_cars[1]
+                        else:
+                            first = first_cars[0]
+
+                    # If multiple cars come in, the one with the highest bmw factor takes priority
                     else:
                         tmp2 = {}
 
                         for car in first_cars:
                             tmp2[car] = car.bmw_factor
 
-                        first = min(tmp2, key=tmp2.get)
+                        first = max(tmp2, key=tmp2.get)
+
                     # Car can move
                     if first == self and self.can_turn():
                         self.turning = True
