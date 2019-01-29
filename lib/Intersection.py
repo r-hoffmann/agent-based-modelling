@@ -101,7 +101,7 @@ class Intersection(Model):
     def calculate_bmw_threshold(self):
         data = np.array([np.random.beta(self.alpha_factor, self.beta_factor) for _ in range(10000)])
 
-        for x in np.arange(0, 1, 0.01):
+        for x in np.arange(0, 1, 0.001):
             if len(data[data < x]) / len(data) >= 1 - self.bmw_fraction:
                 return x
 
@@ -283,8 +283,20 @@ class Intersection(Model):
 
         # Nobody can take priority
         if len(priority_queue) > 0 and sum([1 for _, has_priority in priority_queue.items() if has_priority]) == 0:
-            # Highest BMW factor takes priority
-            priority_queue[max(priority_queue.keys(), key=(lambda k: priority_queue[k]))] = True
+            cars = [(car, car.stop_step) for car in priority_queue if car.road.first == car]
+            first_cars = [car for (car, stop_step) in cars if stop_step == min(cars, key=lambda x: x[1])[1]]
+
+            if len(first_cars) == 4:
+                # Highest BMW factor takes priority
+                priority_queue[max(priority_queue.keys(), key=(lambda k: priority_queue[k]))] = True
+
+            else:
+                for car in first_cars:
+                    car_to_right = self.car_per_stopline[Direction((int(car.current_direction) - 2) % 8)]
+
+                    if car_to_right is None or car_to_right.stop_step != car.stop_step:
+                        priority_queue[car] = True
+                        break
 
         self.priority_queue = priority_queue
 

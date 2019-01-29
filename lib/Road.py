@@ -103,19 +103,19 @@ class Road:
 
         positions = []
         if self.direction == Direction.EAST:
-            positions = [[x - a, y] for a in range(10)]
+            positions = [[x - a, y] for a in range(15)]
         elif self.direction == Direction.NORTH:
-            positions = [[x, y - a] for a in range(10)]
+            positions = [[x, y - a] for a in range(15)]
         elif self.direction == Direction.WEST:
-            positions = [[x + a, y] for a in range(10)]
+            positions = [[x + a, y] for a in range(15)]
         elif self.direction == Direction.SOUTH:
-            positions = [[x, y + a] for a in range(10)]
+            positions = [[x, y + a] for a in range(15)]
 
         for position in positions:
             agents = self.model.grid.get_neighbors(position, True, include_center=True, radius=0)
 
             for agent in agents:
-                if type(agent) == Car:
+                if type(agent) == Car and not agent.turning:
                     return agent
 
         return None
