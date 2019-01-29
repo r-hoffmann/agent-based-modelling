@@ -151,7 +151,7 @@ model_params = {
     "general": UserSettableParameter('static_text', value="General"),
     "max_speed_horizontal": UserSettableParameter('slider', "Max speed horizontal road", 10, 5, 15, 1),
     "max_speed_vertical": UserSettableParameter('slider', "Max speed vertical road", 10, 5, 15, 1),
-    "bmw_threshold": UserSettableParameter('slider', 'Fraction of BMWs', 0.1, 0.0, 1.0, 0.01),
+    "bmw_fraction": UserSettableParameter('slider', 'Fraction of BMWs', 0.1, 0.0, 1.0, 0.01),
     "seed": UserSettableParameter('number', 'Seed (0 for no seed)', 1337),
     "intersection_type": UserSettableParameter('choice', 'Intersection type', value='Fourway',
                                               choices=['Fourway', 'Traffic lights', 'Equivalent']),

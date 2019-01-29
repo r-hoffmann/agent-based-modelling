@@ -92,6 +92,21 @@ class Intersection(Model):
         else:
             self.rnd = np.random.RandomState(self.seed)
 
+        self.alpha_factor = 2
+        self.beta_factor = 5
+
+        # If BMW factor of a car is bigger than this value it is a BMW
+        self.bmw_threshold = self.calculate_bmw_threshold()
+
+    def calculate_bmw_threshold(self):
+        data = np.array([np.random.beta(self.alpha_factor, self.beta_factor) for _ in range(10000)])
+
+        for x in np.arange(0, 1, 0.01):
+            if len(data[data < x]) / len(data) >= 1 - self.bmw_fraction:
+                return x
+
+        return 1
+
     def section_is_locked(self, direction):
         return self.is_locked_section[direction]
 

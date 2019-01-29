@@ -30,9 +30,6 @@ class Road:
 
         self.p_next_directions = np.array(p_next_directions) / sum(p_next_directions)
 
-        self.alpha_factor = 2
-        self.beta_factor = 5
-
     # line_height is the height of the line (line width == lane_width)
     def calculate_stop_line(self):
         size = 216  # HARDCODED  != OK
@@ -59,7 +56,7 @@ class Road:
         desired_velocity = min(15, max(5, int(np.round(self.model.rnd.normal(self.max_speed, 2)))))
         maximum_acceleration = min(2.0, max(0.6, self.model.rnd.normal(1, 0.2)))
         comfortable_deceleration = min(3.0, max(1.0, self.model.rnd.normal(2.0, 0.5)))
-        bmw_factor = self.model.rnd.beta(self.alpha_factor, self.beta_factor)
+        bmw_factor = self.model.rnd.beta(self.model.alpha_factor, self.model.beta_factor)
 
         car = Car(
             unique_id,
