@@ -2,6 +2,7 @@ from lib.Intersection import Intersection
 from SALib.sample import saltelli
 from SALib.analyze import sobol
 import numpy as np
+from lib import *
 
 problem = {
 	'num_vars': 4,
@@ -28,7 +29,7 @@ def model_for_sensitivity(p_spawn=0.1, max_speed_horizontal=10, max_speed_vertic
 	intersections = ['Fourway', 'Traffic lights', 'Equivalent']
 	intersection = intersections[intersection_type]
 
-	parameters = {
+	parameter_set = {
 		"max_speed_horizontal": int(max_speed_horizontal),
 		"max_speed_vertical": int(max_speed_vertical),
 		"alpha_factor": 2,
@@ -59,22 +60,22 @@ def model_for_sensitivity(p_spawn=0.1, max_speed_horizontal=10, max_speed_vertic
 		"p_south_to_east": p_right,
 		"p_south_to_south": p_u_turn,
 	}
-	
-	model = Intersection(parameters=parameters, parameters_as_dict=True)
-	model.run_model(10)
-	model.throughput.collect(model)
-	df2 = model.throughput.get_model_vars_dataframe()
-	# Return average throughput
-	return df2.values[-1]
+
+	print(parameter_set)
+	model = Intersection(parameters = parameter_set, parameters_as_dict=True)
+	datawriter = DataWriter(model)
+	datawriter.run(20)
+	data = datawriter.get_runs_by_parameters(parameter_set)
+	return data['results']['throughput'][-1]
 
 # Generate parameters
-param_values = saltelli.sample(problem, 100)
+param_values = saltelli.sample(problem, 10)
 
 # generate output:
 Y = np.zeros([param_values.shape[0]])
 
 for i, X in enumerate(param_values):
-	Y[i] = model_for_sensitivity( X[0], X[1], X[2], X[3] )
+	Y[i] = model_for_sensitivity(X[0], X[1], X[2], X[3])
 
 Si = sobol.analyze(problem, Y)
 
