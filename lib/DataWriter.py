@@ -7,6 +7,8 @@ class DataWriter:
         self.intersection = intersection
         self.root_dir = root_dir
         self.database_filename = 'data/sqlite_database.db'
+        if not os.path.exists(self.database_filename):
+                self.build_database()
     
     def get_parameters(self):
         parameters = self.intersection.parameters
@@ -24,8 +26,6 @@ class DataWriter:
         if source=='file':
             self.write_file(data)
         elif source=='database':
-            if not os.path.exists(self.database_filename):
-                self.build_database()
             self.write_database(data)
 
     def build_database(self):
@@ -99,7 +99,10 @@ class DataWriter:
 
         cur = conn.cursor()
         cur.execute('''SELECT * FROM parameters WHERE run_id = ?''', run_id)
-        data['parameters'] = cur.fetchall()
+        parameters = cur.fetchall()
+        data['parameters'] = dict()
+        for parameter in parameters:
+            data['parameters'][parameter[2]] = parameter[3]
         conn.close()
         return data
 
@@ -115,11 +118,18 @@ class DataWriter:
                 sql += ''' INTERSECT '''
             sql += '''SELECT run_id FROM parameters
                      WHERE parameter_name=\'{}\' AND parameter_value LIKE \'{}\''''.format(parameter, parameters[parameter])
-        print(sql)
+
         cur.execute(sql)
         run_ids = cur.fetchone()
         if run_ids == None:
-            raise Exception('No run fournd with these parameters')
+            """ raise Exception('No run found with these parameters') """
+
+            # For testing
+            self.intersection = Intersection( parameters=parameters, parameters_as_dict=True )
+            self.run(50)
+            cur.execute('''SELECT MAX(id) FROM runs''')
+            run_id = cur.fetchone()[0]
+            return self.read_database(run_id)
         else:
             print('Found run ids: {}'.format(run_ids))
 
