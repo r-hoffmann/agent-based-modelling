@@ -88,7 +88,7 @@ def agent_portrayal(agent):
 
     portrayal['Shape'] = 'assets/images/arrow_{}__{}.png'.format(next_direction, current_direction)
 
-    if agent.bmw_factor > 0.7:
+    if agent.bmw_factor >= agent.model.bmw_threshold:
         if agent.current_direction == Direction.EAST:
             portrayal['Shape'] = 'assets/images/bmw_arrow_east.png'
         elif agent.current_direction == Direction.SOUTH_EAST:

@@ -254,7 +254,10 @@ class Intersection(Model):
         priority_queue = {}
         for road in self.roads:
             if road.first:
-                priority_queue[road.first] = road.first.stop_step
+                if road.first.bmw_factor >= self.bmw_threshold:
+                    priority_queue[road.first] = 0
+                else:
+                    priority_queue[road.first] = road.first.stop_step
 
         self.priority_queue = priority_queue
 
@@ -263,7 +266,14 @@ class Intersection(Model):
             self.car_per_stopline[Direction((int(road.direction) + 4) % 8)] = road.car_at_stopline()
 
     def update_equivalent_priority_queue(self):
+        # Make sure their are cars in the priority queue
+        if len([car for car in self.car_per_stopline.values() if car]) == 0:
+            self.priority_queue = {}
+            return
+
         priority_queue = {}
+
+        # Normal rules
         for direction, car in self.car_per_stopline.items():
             if car:
                 car_to_right = self.car_per_stopline[Direction((int(direction) + 2) % 8)]
@@ -280,6 +290,18 @@ class Intersection(Model):
 
                 if car_across and car_across.turn_type == Turn.STRAIGHT:
                     priority_queue[car] = False
+
+        # BMW takes priority
+        highest_bmw = max([(car, car.bmw_factor) for car in self.car_per_stopline.values() if car], key=lambda x: x[1])
+        if highest_bmw[1] >= self.bmw_threshold:
+            priority_queue[highest_bmw[0]] = True
+
+            for _, car in self.car_per_stopline.items():
+                if car and car != highest_bmw[0]:
+                    priority_queue[car] = False
+
+            self.priority_queue = priority_queue
+            return
 
         # Nobody can take priority
         if len(priority_queue) > 0 and sum([1 for _, has_priority in priority_queue.items() if has_priority]) == 0:
