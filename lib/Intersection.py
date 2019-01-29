@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+
 from mesa import Model
 from mesa.datacollection import DataCollector
 from mesa.space import MultiGrid
@@ -86,6 +87,11 @@ class Intersection(Model):
         self.priority_queue = None
         self.car_per_stopline = {}
 
+        if self.seed == 0:
+            self.rnd = np.random.RandomState()
+        else:
+            self.rnd = np.random.RandomState(self.seed)
+
     def section_is_locked(self, direction):
         return self.is_locked_section[direction]
 
@@ -140,8 +146,7 @@ class Intersection(Model):
                     self.p_north_to_west,
                     self.p_north_to_south,
                 ],
-                self.max_speed_vertical,
-                (self.alpha_factor, self.beta_factor)
+                self.max_speed_vertical
             )
         )
 
@@ -157,8 +162,7 @@ class Intersection(Model):
                     self.p_west_to_west,
                     self.p_west_to_south,
                 ],
-                self.max_speed_horizontal,
-                (self.alpha_factor, self.beta_factor)
+                self.max_speed_horizontal
             )
         )
 
@@ -174,8 +178,7 @@ class Intersection(Model):
                     self.p_east_to_west,
                     self.p_east_to_south,
                 ],
-                self.max_speed_horizontal,
-                (self.alpha_factor, self.beta_factor)
+                self.max_speed_horizontal
             )
         )
 
@@ -191,8 +194,7 @@ class Intersection(Model):
                     self.p_south_to_west,
                     self.p_south_to_south,
                 ],
-                self.max_speed_vertical,
-                (self.alpha_factor, self.beta_factor)
+                self.max_speed_vertical
             )
         )
 
@@ -239,10 +241,7 @@ class Intersection(Model):
             if road.first:
                 priority_queue[road.first] = road.first.stop_step
 
-        # self.priority_queue = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]     
         self.priority_queue = priority_queue
-
-        # print(self.priority_queue)
 
     def get_car_per_stopline(self):
         for road in self.roads:
@@ -273,20 +272,6 @@ class Intersection(Model):
             priority_queue[max(priority_queue.keys(), key=(lambda k: priority_queue[k]))] = True
 
         self.priority_queue = priority_queue
-
-
-    # def update_priority_queues(self):
-    #     priority_queue = {}
-
-    #     # build priority queue
-    #     for road in self.roads:
-    #         if road.first:
-    #             priority_queue[road.first] = road.first.stop_step
-
-    #     # set priority queues            
-    #     for road in self.roads:
-    #         if road.first:
-    #             road.first.priority_queue = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]        
 
     def run_model(self, n=100):
         for _ in range(n):
@@ -382,7 +367,7 @@ def rotate_trafficlights(intersection):
     from_west = intersection.t_from_west
     from_south = intersection.t_from_south
 
-    # 4 * 3 is margin between traffic lights "Orange light"
+    # 4 * 10 is margin between traffic lights "Orange light"
     total = from_north + from_west + from_east + from_south + 4 * 10
 
     current_step = intersection.schedule.steps

@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 
 from lib.Car import Car
@@ -7,7 +5,7 @@ from lib.Direction import Direction
 
 
 class Road:
-    def __init__(self, model, start_location, direction, p_car_spawn, p_next_directions, max_speed, social_factors):
+    def __init__(self, model, start_location, direction, p_car_spawn, p_next_directions, max_speed):
         """
         Creates a road
         :param start_location: The location of the right most cell of the right part of the road
@@ -32,7 +30,8 @@ class Road:
 
         self.p_next_directions = np.array(p_next_directions) / sum(p_next_directions)
 
-        self.alpha_factor, self.beta_factor = social_factors
+        self.alpha_factor = 2
+        self.beta_factor = 5
 
     # line_height is the height of the line (line width == lane_width)
     def calculate_stop_line(self):
@@ -53,14 +52,14 @@ class Road:
         return x, y
 
     def spawn_car(self, unique_id):
-        next_direction = np.random.choice([Direction.EAST, Direction.NORTH, Direction.WEST, Direction.SOUTH],
+        next_direction = self.model.rnd.choice([Direction.EAST, Direction.NORTH, Direction.WEST, Direction.SOUTH],
                                           p=self.p_next_directions)
 
         # TODO: Add different velocities by increasing the sigma
-        desired_velocity = min(15, max(5, int(np.round(random.gauss(self.max_speed, 2)))))
-        maximum_acceleration = min(2.0, max(0.6, random.gauss(1, 0.2)))
-        comfortable_deceleration = min(3.0, max(1.0, random.gauss(2.0, 0.5)))
-        bmw_factor = np.random.beta(self.alpha_factor, self.beta_factor)
+        desired_velocity = min(15, max(5, int(np.round(self.model.rnd.normal(self.max_speed, 2)))))
+        maximum_acceleration = min(2.0, max(0.6, self.model.rnd.normal(1, 0.2)))
+        comfortable_deceleration = min(3.0, max(1.0, self.model.rnd.normal(2.0, 0.5)))
+        bmw_factor = self.model.rnd.beta(self.alpha_factor, self.beta_factor)
 
         car = Car(
             unique_id,
@@ -125,7 +124,7 @@ class Road:
         return None
 
     def step(self):
-        if random.random() <= self.p_car_spawn:
+        if self.model.rnd.rand() <= self.p_car_spawn:
             self.spawn_car(len(self.model.cars))
 
         # Check whether a new car could be spawned on the road

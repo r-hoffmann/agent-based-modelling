@@ -439,6 +439,7 @@ class Car(Agent):
                         self.road.first = None
                         self.lock_turn(0)
                         self.move()
+
                 # while at intersection
                 else:
                     self.move()
