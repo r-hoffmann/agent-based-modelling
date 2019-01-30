@@ -442,7 +442,7 @@ class Car(Agent):
                 # while at intersection
                 else:
                     self.move()
-            elif self.model.intersection_type == 'Traffic lights':
+            elif self.model.intersection_type == 'Traffic lights' or self.model.intersection_type == 'Smart lights':
                 if not self.model.is_locked_section[self.current_direction] and (self.is_at_stopline() or self.approaching_intersection()):
                     self.turning = True
                     self.move()

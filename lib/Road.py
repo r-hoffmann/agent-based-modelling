@@ -29,6 +29,7 @@ class Road:
         self.stop_line_pos = self.calculate_stop_line()
 
         self.p_next_directions = np.array(p_next_directions) / sum(p_next_directions)
+        print(self.p_car_spawn)
 
     # line_height is the height of the line (line width == lane_width)
     def calculate_stop_line(self):
@@ -119,6 +120,29 @@ class Road:
                     return agent
 
         return None
+
+    def count_cars_before_stopline(self):
+        x, y = self.stop_line_pos
+
+        positions = []
+        if self.direction == Direction.EAST:
+            positions = [[x - a, y] for a in range(abs(x))]
+        elif self.direction == Direction.NORTH:
+            positions = [[x, y - a] for a in range(abs(y))]
+        elif self.direction == Direction.WEST:
+            positions = [[x + a, y] for a in range(abs(x))]
+        elif self.direction == Direction.SOUTH:
+            positions = [[x, y + a] for a in range(abs(y))]
+
+        count = 0
+        for position in positions:
+            agents = self.model.grid.get_neighbors(position, True, include_center=True, radius=0)
+
+            for agent in agents:
+                if type(agent) == Car and not agent.turning:
+                    count += 1
+
+        return count
 
     def step(self):
         if self.model.rnd.rand() <= self.p_car_spawn:
