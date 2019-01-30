@@ -126,12 +126,12 @@ class DataWriter:
 
             # For testing
             self.intersection = Intersection( parameters=parameters, parameters_as_dict=True )
-            self.run(50)
+            self.run()
             cur.execute('''SELECT MAX(id) FROM runs''')
             run_id = cur.fetchone()[0]
             return self.read_database(run_id)
-        else:
-            print('Found run ids: {}'.format(run_ids))
+        # else:
+            # print('Found run ids: {}'.format(run_ids))
 
         return self.read_database(run_ids[0])
 
