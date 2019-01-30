@@ -88,7 +88,7 @@ def agent_portrayal(agent):
 
     portrayal['Shape'] = 'assets/images/arrow_{}__{}.png'.format(next_direction, current_direction)
 
-    if agent.bmw_factor > 0.7:
+    if agent.bmw_factor >= agent.model.bmw_threshold:
         if agent.current_direction == Direction.EAST:
             portrayal['Shape'] = 'assets/images/bmw_arrow_east.png'
         elif agent.current_direction == Direction.SOUTH_EAST:
@@ -155,7 +155,7 @@ model_params = {
     "beta_factor": UserSettableParameter('slider', "Antisocial beta factor", 2, 0, 10, .01),
     "intersection_type": UserSettableParameter('choice', 'Intersection type', value='Equivalent',
                                               choices=['Fourway', 'Traffic lights', 'Equivalent']),
-    "traffic_light_title": UserSettableParameter('static_text', value="Trafficlights duration"),
+    "traffic_light_title": UserSettableParameter('static_text', value="Traffic lights duration"),
     "t_from_north": UserSettableParameter('slider', 'From North', 20, 0, 20, 1),
     "t_from_west": UserSettableParameter('slider', 'From West', 20, 0, 20, 1),
     "t_from_east": UserSettableParameter('slider', 'From East', 20, 0, 20, 1),
