@@ -13,8 +13,13 @@ problem = {
 			   [0, 3]]
 }
 
+def get_mean_last_runs(dataset, i):
+	n = len(dataset)
+	k = n - i
+	return float(dataset[-1] * n - dataset[k] * k) / float(i)
+
 def model_for_sensitivity(p_spawn=0.1, max_speed_horizontal=10, max_speed_vertical=10, intersection_type=0):
-	t_traffic_light_cycle=5
+	t_traffic_light_cycle = 5
 	p_bend = 0.33
 	p_u_turn = 0.01
 	p_left = p_bend
@@ -61,12 +66,11 @@ def model_for_sensitivity(p_spawn=0.1, max_speed_horizontal=10, max_speed_vertic
 		"p_south_to_south": p_u_turn,
 	}
 
-	print(parameter_set)
 	model = Intersection(parameters = parameter_set, parameters_as_dict=True)
 	datawriter = DataWriter(model)
-	datawriter.run(20)
+	datawriter.run()
 	data = datawriter.get_runs_by_parameters(parameter_set)
-	return data['results']['throughput'][-1]
+	return get_mean_last_runs(data['results']['throughput'], 900)
 
 # Generate parameters
 param_values = saltelli.sample(problem, 10)
@@ -79,7 +83,9 @@ for i, X in enumerate(param_values):
 
 Si = sobol.analyze(problem, Y)
 
-print(Si)
-print('First order sensitivity indices : ', Si['S1'])
-print('Second order sensitivity indices : ', Si['ST'])
-print('Interaction sensitivity indices : ', Si['S2'])
+with open('sensitivity_results.txt', 'w+') as file:
+	file.write(str(Si))
+	file.write('First order sensitivity indices : ' + str(Si['S1']))
+	file.write('Second order sensitivity indices : ' + str(Si['ST']))
+	file.write('Interaction sensitivity indices : ' + str(Si['S2']))
+print('Done!')
