@@ -29,7 +29,6 @@ class Road:
         self.stop_line_pos = self.calculate_stop_line()
 
         self.p_next_directions = np.array(p_next_directions) / sum(p_next_directions)
-        print(self.p_car_spawn)
 
     # line_height is the height of the line (line width == lane_width)
     def calculate_stop_line(self):
@@ -130,9 +129,9 @@ class Road:
         elif self.direction == Direction.NORTH:
             positions = [[x, y - a] for a in range(abs(y))]
         elif self.direction == Direction.WEST:
-            positions = [[x + a, y] for a in range(abs(x))]
+            positions = [[x + a, y] for a in range(abs(216 - x))]
         elif self.direction == Direction.SOUTH:
-            positions = [[x, y + a] for a in range(abs(y))]
+            positions = [[x, y + a] for a in range(abs(216 - y))]
 
         count = 0
         for position in positions:

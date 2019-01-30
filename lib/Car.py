@@ -258,13 +258,13 @@ class Car(Agent):
         self.action.accelerate(self.idm_acceleration())
 
         if self.current_direction == Direction.EAST:
-            self.model.grid.move_agent(self, (self.pos[0] + self.velocity, self.pos[1]))
+            self.move_agent((self.pos[0] + self.velocity, self.pos[1]))
         elif self.current_direction == Direction.NORTH:
-            self.model.grid.move_agent(self, (self.pos[0], self.pos[1] + self.velocity))
+            self.move_agent((self.pos[0], self.pos[1] + self.velocity))
         elif self.current_direction == Direction.WEST:
-            self.model.grid.move_agent(self, (self.pos[0] - self.velocity, self.pos[1]))
+            self.move_agent((self.pos[0] - self.velocity, self.pos[1]))
         elif self.current_direction == Direction.SOUTH:
-            self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
+            self.move_agent((self.pos[0], self.pos[1] - self.velocity))
 
     def turn_finished(self):
         self.turning = False
@@ -323,7 +323,7 @@ class Car(Agent):
                 y = section_y
                 self.next_turn_step()
 
-        self.model.grid.move_agent(self, (x, y))
+        self.move_agent((x, y))
 
     def turn_acceleration(self):
         # Max speed during turn
@@ -472,28 +472,33 @@ class Car(Agent):
                 if self.pos[0] + self.velocity >= self.model.size:
                     self.remove_car(self)
                 else:
-                    self.model.grid.move_agent(self, (self.pos[0] + self.velocity, self.pos[1]))
+                    self.move_agent((self.pos[0] + self.velocity, self.pos[1]))
             elif self.current_direction == Direction.NORTH:
                 if self.pos[1] + self.velocity >= self.model.size:
                     self.remove_car(self)
                 else:
-                    self.model.grid.move_agent(self, (self.pos[0], self.pos[1] + self.velocity))
+                    self.move_agent((self.pos[0], self.pos[1] + self.velocity))
             elif self.current_direction == Direction.WEST:
                 if self.pos[0] - self.velocity < 0:
                     self.remove_car(self)
                 else:
-                    self.model.grid.move_agent(self, (self.pos[0] - self.velocity, self.pos[1]))
+                    self.move_agent((self.pos[0] - self.velocity, self.pos[1]))
             elif self.current_direction == Direction.SOUTH:
                 if self.pos[1] - self.velocity < 0:
                     self.remove_car(self)
                 else:
-                    self.model.grid.move_agent(self, (self.pos[0], self.pos[1] - self.velocity))
+                    self.move_agent((self.pos[0], self.pos[1] - self.velocity))
 
     def remove_car(self, agent):
         self.finish_step = self.model.schedule.steps
         self.model.grid.remove_agent(agent)
         self.model.schedule.remove(agent)
         self.model.finished_cars.append(agent)
+
+    def move_agent(self, pos):
+        self.model.grid.grid[self.pos[0]][self.pos[1]].remove(self)
+        self.model.grid.grid[pos[0]][pos[1]].add(self)
+        self.pos = pos
 
     def __repr__(self):
         return str(self.id)
