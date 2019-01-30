@@ -217,36 +217,6 @@ class Intersection(Model):
             )
         )
 
-    def a(self):
-        self.average_speed.collect(self)
-        self.throughput.collect(self)
-        self.mean_crossover.collect(self)
-        self.mean_crossover_hist.collect(self)
-        self.waiting_cars.collect(self)
-        self.number_of_locked_sections.collect(self)
-
-    def b(self):
-        df1 = self.average_speed.get_model_vars_dataframe()
-        df2 = self.throughput.get_model_vars_dataframe()
-        df3 = self.waiting_cars.get_model_vars_dataframe()
-
-        return df1, df2, df3
-
-    def c(self, df1, df2, df3):
-        df = pd.DataFrame([df1.iloc[:, 0], df2.iloc[:, 0], df3.iloc[:, 0]])
-        df = df.transpose()
-        return df
-
-    def d(self):
-        self.a()
-        # Save the statistics
-        df1, df2, df3 = self.b()
-        df = self.c(df1, df2, df3)
-        df.to_csv('test.csv')
-
-    def e(self):
-        pass
-
     def step(self):
         for road in self.roads:
             road.step()
