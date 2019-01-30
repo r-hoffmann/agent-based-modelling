@@ -217,6 +217,36 @@ class Intersection(Model):
             )
         )
 
+    def a(self):
+        self.average_speed.collect(self)
+        self.throughput.collect(self)
+        self.mean_crossover.collect(self)
+        self.mean_crossover_hist.collect(self)
+        self.waiting_cars.collect(self)
+        self.number_of_locked_sections.collect(self)
+
+    def b(self):
+        df1 = self.average_speed.get_model_vars_dataframe()
+        df2 = self.throughput.get_model_vars_dataframe()
+        df3 = self.waiting_cars.get_model_vars_dataframe()
+
+        return df1, df2, df3
+
+    def c(self, df1, df2, df3):
+        df = pd.DataFrame([df1.iloc[:, 0], df2.iloc[:, 0], df3.iloc[:, 0]])
+        df = df.transpose()
+        return df
+
+    def d(self):
+        self.a()
+        # Save the statistics
+        df1, df2, df3 = self.b()
+        df = self.c(df1, df2, df3)
+        df.to_csv('test.csv')
+
+    def e(self):
+        pass
+
     def step(self):
         for road in self.roads:
             road.step()
@@ -224,7 +254,7 @@ class Intersection(Model):
             if road.free_space and len(road.car_queue) > 0:
                 car = road.car_queue.pop()
                 self.schedule.add(car)
-                self.grid.place_agent(car, car.pos)
+                self.grid.grid[car.pos[0]][car.pos[1]].add(car)
                 car.start_step = self.schedule.steps
 
         if self.intersection_type == 'Fourway':
@@ -235,18 +265,11 @@ class Intersection(Model):
 
         self.schedule.step()
 
-        # Save the statistics
         self.average_speed.collect(self)
-        df1 = self.average_speed.get_model_vars_dataframe()
         self.throughput.collect(self)
-        df2 = self.throughput.get_model_vars_dataframe()
         self.mean_crossover.collect(self)
         self.mean_crossover_hist.collect(self)
         self.waiting_cars.collect(self)
-        df3 = self.waiting_cars.get_model_vars_dataframe()
-        df = pd.DataFrame([df1.iloc[:, 0], df2.iloc[:, 0], df3.iloc[:, 0]])
-        df = df.transpose()
-        df.to_csv('test.csv')
         self.number_of_locked_sections.collect(self)
 
         if self.intersection_type == 'Traffic lights':
@@ -439,7 +462,8 @@ def fourway_get_visualisations(intersection):
         else:
             color = 'rgba(0, 255, 0, 0.5)'
         square = VisualisationSquare(x, y, color)
-        intersection.grid.place_agent(square, [x, y])
+        intersection.grid.grid[x][y].add(square)
+        square.pos = (x, y)
         intersection.visualisations.append(square)
 
 
@@ -465,7 +489,8 @@ def trafficlights_get_visualisations(intersection):
         else:
             color = 'rgba(0, 255, 0, 0.5)'
         square = VisualisationSquare(x, y, color)
-        intersection.grid.place_agent(square, [x, y])
+        intersection.grid.grid[x][y].add(square)
+        square.pos = (x, y)
         intersection.visualisations.append(square)
 
 
@@ -495,7 +520,6 @@ def rotate_trafficlights(intersection):
     directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
     for direction in directions:
         intersection.is_locked_section[direction] = (direction != green_light_direction)
-
 
 # model = Intersection(
 #     max_speed_horizontal=10,
@@ -528,4 +552,4 @@ def rotate_trafficlights(intersection):
 #     p_south_to_east=1,
 #     p_south_to_south=1,
 # )
-# model.run_model(100)
+# model.run_model(1000)
