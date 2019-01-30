@@ -1,8 +1,8 @@
 from lib.Intersection import Intersection
+from lib.DataWriter import DataWriter
 from SALib.sample import saltelli
 from SALib.analyze import sobol
 import numpy as np
-from lib import *
 
 problem = {
 	'num_vars': 4,
@@ -32,8 +32,8 @@ def model_for_sensitivity(p_spawn=0.1, max_speed_horizontal=10, max_speed_vertic
 	parameter_set = {
 		"max_speed_horizontal": int(max_speed_horizontal),
 		"max_speed_vertical": int(max_speed_vertical),
-		"alpha_factor": 2,
-		"beta_factor": 5,
+		"seed": 1337,
+		"bmw_fraction": 0.1,
 		"intersection_type": intersection,
 		"t_from_north": t_from_north,
 		"t_from_west": t_from_west,
