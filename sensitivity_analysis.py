@@ -31,7 +31,7 @@ def model_for_sensitivity(p_spawn=0.1, max_speed_horizontal=10, max_speed_vertic
 	t_from_south = t_traffic_light_cycle
 
 	intersection_type = int(intersection_type)
-	intersections = ['Fourway', 'Traffic lights', 'Equivalent']
+	intersections = ['Fourway', 'Traffic lights', 'Equivalent', 'Smart lights']
 	intersection = intersections[intersection_type]
 
 	parameter_set = {
