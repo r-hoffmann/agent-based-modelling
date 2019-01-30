@@ -7,6 +7,6 @@ test.csv
 data_output
 output
 data/*/*.csv
-data/sqlite_database.db
+data/*.db
 
 \.ipynb_checkpoints/
