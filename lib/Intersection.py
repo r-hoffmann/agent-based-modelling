@@ -80,7 +80,8 @@ class Intersection(Model):
         intersection_to_visualisation_function = {
             'Fourway': lambda m: fourway_get_visualisations(m),
             'Traffic lights': lambda m: trafficlights_get_visualisations(m),
-            'Equivalent': lambda m: fourway_get_visualisations(m)
+            'Equivalent': lambda m: fourway_get_visualisations(m),
+            'Smart lights': lambda m: trafficlights_get_visualisations(m)
         }
 
         self.visualisation_function = intersection_to_visualisation_function[self.intersection_type]
@@ -97,6 +98,9 @@ class Intersection(Model):
 
         # If BMW factor of a car is bigger than this value it is a BMW
         self.bmw_threshold = self.calculate_bmw_threshold()
+
+        self.smart_lights_counter = 0
+        self.green_light_direction = None
 
     def calculate_bmw_threshold(self):
         data = np.array([np.random.beta(self.alpha_factor, self.beta_factor) for _ in range(10000)])
@@ -247,8 +251,64 @@ class Intersection(Model):
 
         if self.intersection_type == 'Traffic lights':
             rotate_trafficlights(self)
+        elif self.intersection_type == 'Smart lights':
+            self.smart_traffic_lights()
 
         self.visualisation_function(self)
+
+    # Simple traffic light logic
+    def smart_traffic_lights(self):
+        cars_per_road = {}
+        total = 0
+        for road in self.roads:
+            cars = road.count_cars_before_stopline()
+            total += cars
+            cars_per_road[road.direction] = cars
+
+        if self.green_light_direction and cars_per_road[self.green_light_direction] == 0:
+            self.smart_lights_counter = max(10, self.smart_lights_counter)
+            directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
+            for direction in directions:
+                self.is_locked_section[direction] = True
+
+        if self.smart_lights_counter == 0:
+            if total == 0:
+                self.green_light_direction = None
+                directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
+                for direction in directions:
+                    self.is_locked_section[direction] = True
+            else:
+                x = self.rnd.randint(0, total)
+                current_count = 0
+
+                for direction, cars in cars_per_road.items():
+                    current_count += cars
+
+                    if x < current_count:
+                        self.green_light_direction = direction
+                        break
+
+                directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
+                for direction in directions:
+                    self.is_locked_section[direction] = (direction != self.green_light_direction)
+
+                if self.green_light_direction == Direction.NORTH:
+                    self.smart_lights_counter = self.t_from_north + 10
+                elif self.green_light_direction == Direction.EAST:
+                    self.smart_lights_counter = self.t_from_east + 10
+                elif self.green_light_direction == Direction.SOUTH:
+                    self.smart_lights_counter = self.t_from_south + 10
+                elif self.green_light_direction == Direction.WEST:
+                    self.smart_lights_counter = self.t_from_west + 10
+                else:
+                    raise Exception('Invalid green light direction')
+        else:
+            if self.smart_lights_counter <= 10:
+                directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
+                for direction in directions:
+                    self.is_locked_section[direction] = True
+
+            self.smart_lights_counter -= 1
 
     def update_fourway_priority_queue(self):
         priority_queue = {}
@@ -435,3 +495,37 @@ def rotate_trafficlights(intersection):
     directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
     for direction in directions:
         intersection.is_locked_section[direction] = (direction != green_light_direction)
+
+
+# model = Intersection(
+#     max_speed_horizontal=10,
+#     max_speed_vertical=10,
+#     bmw_fraction=0.1,
+#     seed=1337,
+#     intersection_type='Fourway',
+#     t_from_north=20,
+#     t_from_west=20,
+#     t_from_east=20,
+#     t_from_south=20,
+#     p_car_spawn_north=1,
+#     p_north_to_north=1,
+#     p_north_to_west=1,
+#     p_north_to_east=1,
+#     p_north_to_south=1,
+#     p_car_spawn_west=1,
+#     p_west_to_north=1,
+#     p_west_to_west=1,
+#     p_west_to_east=1,
+#     p_west_to_south=1,
+#     p_car_spawn_east=1,
+#     p_east_to_north=1,
+#     p_east_to_west=1,
+#     p_east_to_east=1,
+#     p_east_to_south=1,
+#     p_car_spawn_south=1,
+#     p_south_to_north=1,
+#     p_south_to_west=1,
+#     p_south_to_east=1,
+#     p_south_to_south=1,
+# )
+# model.run_model(100)

@@ -15,7 +15,7 @@ parameters =  {
     't_from_west': from_1_to_10,
     't_from_east': from_1_to_10,
     't_from_south': from_1_to_10,
-    'intersection_type': ['Traffic lights', 'Fourway', 'Equivalent'],
+    'intersection_type': ['Smart lights', 'Traffic lights', 'Fourway', 'Equivalent'],
     'p_car_spawn_north': from_0_to_1,
     'p_north_to_north': from_0_to_1,
     'p_north_to_west': from_0_to_1,
