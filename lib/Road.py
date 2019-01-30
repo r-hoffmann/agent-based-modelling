@@ -53,7 +53,7 @@ class Road:
                                           p=self.p_next_directions)
 
         # TODO: Add different velocities by increasing the sigma
-        desired_velocity = min(15, max(5, int(np.round(self.model.rnd.normal(self.max_speed, 2)))))
+        desired_velocity = min(15, max(5, int(np.round(self.model.rnd.normal(self.max_speed + 5, 2)))))
         maximum_acceleration = min(2.0, max(0.6, self.model.rnd.normal(1, 0.2)))
         comfortable_deceleration = min(3.0, max(1.0, self.model.rnd.normal(2.0, 0.5)))
         bmw_factor = self.model.rnd.beta(self.model.alpha_factor, self.model.beta_factor)
