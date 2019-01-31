@@ -8,9 +8,9 @@ problem = {
 	'num_vars': 4,
 	'names': ['p_spawn', 'max_speed_horizontal', 'max_speed_vertical', 'intersection_type'],
 	'bounds': [[0, 1],
-			   [5, 15],
-			   [5, 15],
-			   [0, 3]]
+			   [3, 24],
+			   [3, 24],
+			   [0, 4]]
 }
 
 def get_mean_last_runs(dataset, i):
@@ -81,7 +81,7 @@ Y = np.zeros([param_values.shape[0]])
 for i, X in enumerate(param_values):
 	Y[i] = model_for_sensitivity(X[0], X[1], X[2], X[3])
 
-Si = sobol.analyze(problem, Y)
+Si = sobol.analyze(problem, Y, print_to_console=True)
 
 with open('sensitivity_results.txt', 'w+') as file:
 	file.write(str(Si))
