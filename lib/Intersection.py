@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+
 from mesa import Model
 from mesa.datacollection import DataCollector
 from mesa.space import MultiGrid
@@ -79,12 +80,36 @@ class Intersection(Model):
         intersection_to_visualisation_function = {
             'Fourway': lambda m: fourway_get_visualisations(m),
             'Traffic lights': lambda m: trafficlights_get_visualisations(m),
-            'Equivalent': lambda m: fourway_get_visualisations(m)
+            'Equivalent': lambda m: fourway_get_visualisations(m),
+            'Smart lights': lambda m: trafficlights_get_visualisations(m)
         }
 
         self.visualisation_function = intersection_to_visualisation_function[self.intersection_type]
         self.priority_queue = None
         self.car_per_stopline = {}
+
+        if self.seed == 0:
+            self.rnd = np.random.RandomState()
+        else:
+            self.rnd = np.random.RandomState(self.seed)
+
+        self.alpha_factor = 2
+        self.beta_factor = 5
+
+        # If BMW factor of a car is bigger than this value it is a BMW
+        self.bmw_threshold = self.calculate_bmw_threshold()
+
+        self.smart_lights_counter = 0
+        self.green_light_direction = None
+
+    def calculate_bmw_threshold(self):
+        data = np.array([np.random.beta(self.alpha_factor, self.beta_factor) for _ in range(10000)])
+
+        for x in np.arange(0, 1, 0.001):
+            if len(data[data < x]) / len(data) >= 1 - self.bmw_fraction:
+                return x
+
+        return 1
 
     def section_is_locked(self, direction):
         return self.is_locked_section[direction]
@@ -140,8 +165,7 @@ class Intersection(Model):
                     self.p_north_to_west,
                     self.p_north_to_south,
                 ],
-                self.max_speed_vertical,
-                (self.alpha_factor, self.beta_factor)
+                self.max_speed_vertical
             )
         )
 
@@ -157,8 +181,7 @@ class Intersection(Model):
                     self.p_west_to_west,
                     self.p_west_to_south,
                 ],
-                self.max_speed_horizontal,
-                (self.alpha_factor, self.beta_factor)
+                self.max_speed_horizontal
             )
         )
 
@@ -174,8 +197,7 @@ class Intersection(Model):
                     self.p_east_to_west,
                     self.p_east_to_south,
                 ],
-                self.max_speed_horizontal,
-                (self.alpha_factor, self.beta_factor)
+                self.max_speed_horizontal
             )
         )
 
@@ -191,8 +213,7 @@ class Intersection(Model):
                     self.p_south_to_west,
                     self.p_south_to_south,
                 ],
-                self.max_speed_vertical,
-                (self.alpha_factor, self.beta_factor)
+                self.max_speed_vertical
             )
         )
 
@@ -203,7 +224,7 @@ class Intersection(Model):
             if road.free_space and len(road.car_queue) > 0:
                 car = road.car_queue.pop()
                 self.schedule.add(car)
-                self.grid.place_agent(car, car.pos)
+                self.grid.grid[car.pos[0]][car.pos[1]].add(car)
                 car.start_step = self.schedule.steps
 
         if self.intersection_type == 'Fourway':
@@ -214,42 +235,98 @@ class Intersection(Model):
 
         self.schedule.step()
 
-        # Save the statistics
         self.average_speed.collect(self)
-        df1 = self.average_speed.get_model_vars_dataframe()
         self.throughput.collect(self)
-        df2 = self.throughput.get_model_vars_dataframe()
         self.mean_crossover.collect(self)
         self.mean_crossover_hist.collect(self)
         self.waiting_cars.collect(self)
-        df3 = self.waiting_cars.get_model_vars_dataframe()
-        df = pd.DataFrame([df1.iloc[:, 0], df2.iloc[:, 0], df3.iloc[:, 0]])
-        df = df.transpose()
-        df.to_csv('test.csv')
         self.number_of_locked_sections.collect(self)
 
         if self.intersection_type == 'Traffic lights':
             rotate_trafficlights(self)
+        elif self.intersection_type == 'Smart lights':
+            self.smart_traffic_lights()
 
         self.visualisation_function(self)
+
+    # Simple traffic light logic
+    def smart_traffic_lights(self):
+        cars_per_road = {}
+        total = 0
+        for road in self.roads:
+            cars = road.count_cars_before_stopline()
+            total += cars
+            cars_per_road[road.direction] = cars
+
+        if self.green_light_direction and cars_per_road[self.green_light_direction] == 0:
+            self.smart_lights_counter = max(10, self.smart_lights_counter)
+            directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
+            for direction in directions:
+                self.is_locked_section[direction] = True
+
+        if self.smart_lights_counter == 0:
+            if total == 0:
+                self.green_light_direction = None
+                directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
+                for direction in directions:
+                    self.is_locked_section[direction] = True
+            else:
+                x = self.rnd.randint(0, total)
+                current_count = 0
+
+                for direction, cars in cars_per_road.items():
+                    current_count += cars
+
+                    if x < current_count:
+                        self.green_light_direction = direction
+                        break
+
+                directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
+                for direction in directions:
+                    self.is_locked_section[direction] = (direction != self.green_light_direction)
+
+                if self.green_light_direction == Direction.NORTH:
+                    self.smart_lights_counter = self.t_from_north + 10
+                elif self.green_light_direction == Direction.EAST:
+                    self.smart_lights_counter = self.t_from_east + 10
+                elif self.green_light_direction == Direction.SOUTH:
+                    self.smart_lights_counter = self.t_from_south + 10
+                elif self.green_light_direction == Direction.WEST:
+                    self.smart_lights_counter = self.t_from_west + 10
+                else:
+                    raise Exception('Invalid green light direction')
+        else:
+            if self.smart_lights_counter <= 10:
+                directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
+                for direction in directions:
+                    self.is_locked_section[direction] = True
+
+            self.smart_lights_counter -= 1
 
     def update_fourway_priority_queue(self):
         priority_queue = {}
         for road in self.roads:
             if road.first:
-                priority_queue[road.first] = road.first.stop_step
+                if road.first.bmw_factor >= self.bmw_threshold:
+                    priority_queue[road.first] = 0
+                else:
+                    priority_queue[road.first] = road.first.stop_step
 
-        # self.priority_queue = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]     
         self.priority_queue = priority_queue
-
-        # print(self.priority_queue)
 
     def get_car_per_stopline(self):
         for road in self.roads:
             self.car_per_stopline[Direction((int(road.direction) + 4) % 8)] = road.car_at_stopline()
 
     def update_equivalent_priority_queue(self):
+        # Make sure their are cars in the priority queue
+        if len([car for car in self.car_per_stopline.values() if car]) == 0:
+            self.priority_queue = {}
+            return
+
         priority_queue = {}
+
+        # Normal rules
         for direction, car in self.car_per_stopline.items():
             if car:
                 car_to_right = self.car_per_stopline[Direction((int(direction) + 2) % 8)]
@@ -267,26 +344,36 @@ class Intersection(Model):
                 if car_across and car_across.turn_type == Turn.STRAIGHT:
                     priority_queue[car] = False
 
+        # BMW takes priority
+        highest_bmw = max([(car, car.bmw_factor) for car in self.car_per_stopline.values() if car], key=lambda x: x[1])
+        if highest_bmw[1] >= self.bmw_threshold:
+            priority_queue[highest_bmw[0]] = True
+
+            for _, car in self.car_per_stopline.items():
+                if car and car != highest_bmw[0]:
+                    priority_queue[car] = False
+
+            self.priority_queue = priority_queue
+            return
+
         # Nobody can take priority
         if len(priority_queue) > 0 and sum([1 for _, has_priority in priority_queue.items() if has_priority]) == 0:
-            # Highest BMW factor takes priority
-            priority_queue[max(priority_queue.keys(), key=(lambda k: priority_queue[k]))] = True
+            cars = [(car, car.stop_step) for car in priority_queue if car.road.first == car]
+            first_cars = [car for (car, stop_step) in cars if stop_step == min(cars, key=lambda x: x[1])[1]]
+
+            if len(first_cars) == 4:
+                # Highest BMW factor takes priority
+                priority_queue[max(priority_queue.keys(), key=(lambda k: priority_queue[k]))] = True
+
+            else:
+                for car in first_cars:
+                    car_to_right = self.car_per_stopline[Direction((int(car.current_direction) - 2) % 8)]
+
+                    if car_to_right is None or car_to_right.stop_step != car.stop_step:
+                        priority_queue[car] = True
+                        break
 
         self.priority_queue = priority_queue
-
-
-    # def update_priority_queues(self):
-    #     priority_queue = {}
-
-    #     # build priority queue
-    #     for road in self.roads:
-    #         if road.first:
-    #             priority_queue[road.first] = road.first.stop_step
-
-    #     # set priority queues            
-    #     for road in self.roads:
-    #         if road.first:
-    #             road.first.priority_queue = [(k, priority_queue[k]) for k in sorted(priority_queue, key=priority_queue.get)]        
 
     def run_model(self, n=100):
         for _ in range(n):
@@ -345,7 +432,8 @@ def fourway_get_visualisations(intersection):
         else:
             color = 'rgba(0, 255, 0, 0.5)'
         square = VisualisationSquare(x, y, color)
-        intersection.grid.place_agent(square, [x, y])
+        intersection.grid.grid[x][y].add(square)
+        square.pos = (x, y)
         intersection.visualisations.append(square)
 
 
@@ -371,7 +459,8 @@ def trafficlights_get_visualisations(intersection):
         else:
             color = 'rgba(0, 255, 0, 0.5)'
         square = VisualisationSquare(x, y, color)
-        intersection.grid.place_agent(square, [x, y])
+        intersection.grid.grid[x][y].add(square)
+        square.pos = (x, y)
         intersection.visualisations.append(square)
 
 
@@ -382,7 +471,7 @@ def rotate_trafficlights(intersection):
     from_west = intersection.t_from_west
     from_south = intersection.t_from_south
 
-    # 4 * 3 is margin between traffic lights "Orange light"
+    # 4 * 10 is margin between traffic lights "Orange light"
     total = from_north + from_west + from_east + from_south + 4 * 10
 
     current_step = intersection.schedule.steps
@@ -401,3 +490,36 @@ def rotate_trafficlights(intersection):
     directions = [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]
     for direction in directions:
         intersection.is_locked_section[direction] = (direction != green_light_direction)
+
+# model = Intersection(
+#     max_speed_horizontal=10,
+#     max_speed_vertical=10,
+#     bmw_fraction=0.1,
+#     seed=1337,
+#     intersection_type='Fourway',
+#     t_from_north=20,
+#     t_from_west=20,
+#     t_from_east=20,
+#     t_from_south=20,
+#     p_car_spawn_north=1,
+#     p_north_to_north=1,
+#     p_north_to_west=1,
+#     p_north_to_east=1,
+#     p_north_to_south=1,
+#     p_car_spawn_west=1,
+#     p_west_to_north=1,
+#     p_west_to_west=1,
+#     p_west_to_east=1,
+#     p_west_to_south=1,
+#     p_car_spawn_east=1,
+#     p_east_to_north=1,
+#     p_east_to_west=1,
+#     p_east_to_east=1,
+#     p_east_to_south=1,
+#     p_car_spawn_south=1,
+#     p_south_to_north=1,
+#     p_south_to_west=1,
+#     p_south_to_east=1,
+#     p_south_to_south=1,
+# )
+# model.run_model(1000)
