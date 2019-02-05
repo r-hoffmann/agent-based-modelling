@@ -148,8 +148,8 @@ class Car(Agent):
         y += y_diff
 
         while 0 < x < self.model.size and 0 < y < self.model.size:
-            if (x, y) == self.road.stop_line_pos:
-                return (x, y), 0
+            # if (x, y) == self.road.stop_line_pos:
+            #     return (x, y), 0
 
             if not self.model.grid.is_cell_empty((x, y)):
                 neighborhood = self.model.grid.get_neighbors((x, y), True, include_center=True, radius=0)
@@ -398,74 +398,74 @@ class Car(Agent):
     ''' Framework functions '''
 
     def advance(self):
-        if self.turning:
-            self.move()
-        elif self.is_at_intersection():
-            if self.model.intersection_type == 'Fourway':
-                # set stop counter when car first arrives at the stopline
-                if self.stop_step == 0:
-                    self.stop_step = self.model.schedule.steps
-                    self.road.first = self
-                # ik sta stil maar wacht minstens 1 tijdstap
-                elif self.road.first == self:
-                    priority_queue = self.model.priority_queue
-
-                    # get all cars that can go first
-                    first_cars = [k for k, v in priority_queue.items() if v == min(priority_queue.values())]
-
-                    if len(first_cars) == 1:
-                        first = first_cars[0]
-
-                    # If 2 cars arrive at the same time the right one has priority
-                    elif len(first_cars) == 2 and (first_cars[0].current_direction - first_cars[1].current_direction) % 8 in [2, 6]:
-                        if (first_cars[0].current_direction - first_cars[1].current_direction) % 8 == 2:
-                            first = first_cars[1]
-                        else:
-                            first = first_cars[0]
-
-                    # If multiple cars come in, the one with the highest bmw factor takes priority
-                    else:
-                        tmp2 = {}
-
-                        for car in first_cars:
-                            tmp2[car] = car.bmw_factor
-
-                        first = max(tmp2, key=tmp2.get)
-
-                    # Car can move
-                    if first == self and self.can_turn():
-                        self.turning = True
-                        self.road.first = None
-                        self.lock_turn(0)
-                        self.move()
-
-                # while at intersection
-                else:
-                    self.move()
-            elif self.model.intersection_type == 'Traffic lights' or self.model.intersection_type == 'Smart lights':
-                if not self.model.is_locked_section[self.current_direction] and (self.is_at_stopline() or self.approaching_intersection()):
-                    self.turning = True
-                    self.move()
-                if self.turn_completed:
-                    self.move()
-            elif self.model.intersection_type == 'Equivalent':
-                # ik sta stil maar wacht minstens 1 tijdstap
-                # set stop counter when car first arrives at the stopline
-                if self.stop_step == 0:
-                    self.stop_step = self.model.schedule.steps
-                    self.road.first = self
-                elif self.road.first == self:
-                    if self in self.model.priority_queue and self.model.priority_queue[self] or self.equivalent_can_cross():
-                        if self.can_turn():
-                            self.turning = True
-                            self.road.first = None
-                            self.lock_turn(0)
-                            self.move()
-
-                # while at intersection
-                else:
-                    self.move()
-        else:
+        # if self.turning:
+        #     self.move()
+        # elif self.is_at_intersection():
+        #     if self.model.intersection_type == 'Fourway':
+        #         # set stop counter when car first arrives at the stopline
+        #         if self.stop_step == 0:
+        #             self.stop_step = self.model.schedule.steps
+        #             self.road.first = self
+        #         # ik sta stil maar wacht minstens 1 tijdstap
+        #         elif self.road.first == self:
+        #             priority_queue = self.model.priority_queue
+        #
+        #             # get all cars that can go first
+        #             first_cars = [k for k, v in priority_queue.items() if v == min(priority_queue.values())]
+        #
+        #             if len(first_cars) == 1:
+        #                 first = first_cars[0]
+        #
+        #             # If 2 cars arrive at the same time the right one has priority
+        #             elif len(first_cars) == 2 and (first_cars[0].current_direction - first_cars[1].current_direction) % 8 in [2, 6]:
+        #                 if (first_cars[0].current_direction - first_cars[1].current_direction) % 8 == 2:
+        #                     first = first_cars[1]
+        #                 else:
+        #                     first = first_cars[0]
+        #
+        #             # If multiple cars come in, the one with the highest bmw factor takes priority
+        #             else:
+        #                 tmp2 = {}
+        #
+        #                 for car in first_cars:
+        #                     tmp2[car] = car.bmw_factor
+        #
+        #                 first = max(tmp2, key=tmp2.get)
+        #
+        #             # Car can move
+        #             if first == self and self.can_turn():
+        #                 self.turning = True
+        #                 self.road.first = None
+        #                 self.lock_turn(0)
+        #                 self.move()
+        #
+        #         # while at intersection
+        #         else:
+        #             self.move()
+        #     elif self.model.intersection_type == 'Traffic lights' or self.model.intersection_type == 'Smart lights':
+        #         if not self.model.is_locked_section[self.current_direction] and (self.is_at_stopline() or self.approaching_intersection()):
+        #             self.turning = True
+        #             self.move()
+        #         if self.turn_completed:
+        #             self.move()
+        #     elif self.model.intersection_type == 'Equivalent':
+        #         # ik sta stil maar wacht minstens 1 tijdstap
+        #         # set stop counter when car first arrives at the stopline
+        #         if self.stop_step == 0:
+        #             self.stop_step = self.model.schedule.steps
+        #             self.road.first = self
+        #         elif self.road.first == self:
+        #             if self in self.model.priority_queue and self.model.priority_queue[self] or self.equivalent_can_cross():
+        #                 if self.can_turn():
+        #                     self.turning = True
+        #                     self.road.first = None
+        #                     self.lock_turn(0)
+        #                     self.move()
+        #
+        #         # while at intersection
+        #         else:
+        #             self.move()
+        # else:
             self.action.accelerate(self.idm_acceleration())
 
             if self.current_direction == Direction.EAST:
