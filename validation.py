@@ -60,7 +60,7 @@ def model_for_validation(p_spawn=0.1, max_speed_horizontal=10, max_speed_vertica
 
 	model = Intersection(parameters = parameter_set, parameters_as_dict=True)
 	datawriter = DataWriter(model)
-	datawriter.run(100)
+	datawriter.run(1000)
 	data = datawriter.get_runs_by_parameters(parameter_set)
 	flow = data['results']['throughput'][-1]
 	speed = data['results']['average_speed'][-1]
