@@ -37,13 +37,14 @@ To launch the jupyter notebook, run:
 If your browser doesn't open automatically, point it to [http://localhost:8888/](http://localhost:8888/) and open any of the iPython notebooks for interactivity. 
 
 ## Files
-./assets
+.
++--assets
 This folder contains assets for the mesa server.
 
-./data
++--data
 This folder contains the generated data of the model.
 
-./lib
++--lib
 This folder contains the source code of the model.
 
 ## Further Reading
