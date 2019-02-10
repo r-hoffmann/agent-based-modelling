@@ -1,7 +1,6 @@
 from enum import IntEnum
 
 
-# 2: to top, 6: to bottom, 0: to right, 4: to left
 class Direction(IntEnum):
     EAST = 0
     NORTH_EAST = 1
@@ -13,6 +12,10 @@ class Direction(IntEnum):
     SOUTH_EAST = 7
 
     def opposite(self):
+        """
+        Get the opposite direction
+        :return: Direction
+        """
         if self == self.EAST:
             return self.WEST
         elif self == self.WEST:
@@ -23,11 +26,21 @@ class Direction(IntEnum):
             return self.NORTH
 
     def is_opposite(self, c):
+        """
+        Check if two directions are the opposite
+        :param c: Other direction
+        :return: Boolean
+        """
         if self.opposite() == c:
             return True
         return False
 
     def is_equal(self, c):
+        """
+        Check if two direction are the same
+        :param c: Other direction
+        :return: Boolean
+        """
         if self == c:
             return True
         return False

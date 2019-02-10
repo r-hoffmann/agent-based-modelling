@@ -12,6 +12,7 @@ class Road:
         :param direction: The direction of the road. This direction is an integer between 0 and 7. Where 0 is a
         direction of 0 degrees, 1 of 45 degrees, etc.
         :param p_car_spawn: The probability of car spawning during each time step
+        :param p_next_directions: the probabilities for the car of taking each of the directions
         :param max_speed: The speed limit of the road
         """
         self.model = model
@@ -30,8 +31,11 @@ class Road:
 
         self.p_next_directions = np.array(p_next_directions) / sum(p_next_directions)
 
-    # line_height is the height of the line (line width == lane_width)
     def calculate_stop_line(self):
+        """
+        Calculate the position of the stopline
+        :return: (x, y)
+        """
         size = 216  # HARDCODED  != OK
 
         x = self.start_location[0]
@@ -49,6 +53,13 @@ class Road:
         return x, y
 
     def spawn_car(self, unique_id):
+        """
+        Adds a car to the queue
+        :param unique_id: ID of the car
+        :return: None
+        """
+
+        # Stochastic parameters
         next_direction = self.model.rnd.choice([Direction.EAST, Direction.NORTH, Direction.WEST, Direction.SOUTH],
                                           p=self.p_next_directions)
 
@@ -65,7 +76,6 @@ class Road:
             self.direction,
             next_direction,
             desired_velocity,
-            30,
             bmw_factor,
             self.model.schedule.steps,
             desired_velocity,
@@ -73,10 +83,18 @@ class Road:
             comfortable_deceleration
         )
 
+        # Prepend car to the queue
         self.car_queue.insert(0, car)
+
+        # Add car to the model
         self.model.cars.append(car)
 
     def calculate_locations(self):
+        """
+        Calculate the locations of the beginning of the road, which is used to check if there is free space to spawn the
+        next car in the queue
+        :return: List of locations [[x_1,y_1],[x_2,y_2],...]
+        """
         (x, y) = self.start_location
 
         if self.direction == Direction.EAST:
@@ -89,6 +107,10 @@ class Road:
             return [[x, y - a] for a in range(11)]
 
     def check_free_space(self):
+        """
+        Check if there is free space to spawn the next car in the queue
+        :return: Boolean
+        """
         free = True
         for location in self.check_locations:
             if not self.model.grid.is_cell_empty(location):
@@ -98,6 +120,10 @@ class Road:
         self.free_space = free
 
     def car_at_stopline(self):
+        """
+        Returns the car at the stopline if there is one
+        :return: Car|None
+        """
         x, y = self.stop_line_pos
 
         positions = []
@@ -120,6 +146,10 @@ class Road:
         return None
 
     def count_cars_before_stopline(self):
+        """
+        Count the number of cars before the stopline
+        :return: Integer
+        """
         x, y = self.stop_line_pos
 
         positions = []
@@ -143,6 +173,10 @@ class Road:
         return count
 
     def step(self):
+        """
+        Adds car to queue based on probability
+        :return: None
+        """
         if self.model.rnd.rand() <= self.p_car_spawn:
             self.spawn_car(len(self.model.cars))
 
