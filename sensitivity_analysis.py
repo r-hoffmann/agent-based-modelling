@@ -3,6 +3,7 @@ from lib.DataWriter import DataWriter
 from SALib.sample import saltelli
 from SALib.analyze import sobol
 import numpy as np
+import matplotlib.pyplot as plt
 
 problem = {
 	'num_vars': 4,
@@ -70,22 +71,62 @@ def model_for_sensitivity(p_spawn=0.1, max_speed_horizontal=10, max_speed_vertic
 	datawriter = DataWriter(model)
 	datawriter.run()
 	data = datawriter.get_runs_by_parameters(parameter_set)
-	return get_mean_last_runs(data['results']['throughput'], 900)
+	flow = data['results']['throughput'][-1]
+	crossover = data['results']['mean_crossover_time'][-1]
+	av_speed = data['results']['average_speed'][-1]
+	out = np.array([flow,crossover,av_speed])
+	return out[0]
 
 # Generate parameters
-param_values = saltelli.sample(problem, 10)
+param_values = saltelli.sample(problem, 500)
+
 
 # generate output:
-Y = np.zeros([param_values.shape[0]])
+Y = np.zeros((param_values.shape[0]))
+
+print(len(Y))
 
 for i, X in enumerate(param_values):
 	Y[i] = model_for_sensitivity(X[0], X[1], X[2], X[3])
+	print(i)
 
 Si = sobol.analyze(problem, Y, print_to_console=True)
 
-with open('sensitivity_results.txt', 'w+') as file:
+x = ['Spawning probability', 'Horizontal speed', 'Vertical speed', 'Intersection type']
+
+plt.rc('ytick', labelsize=7)
+plt.rc('xtick', labelsize = 7)
+fig, ax = plt.subplots(figsize = (5,5))
+
+ax.errorbar(Si['S1'],x, xerr = Si['S1_conf'], fmt = 'o')
+ax.set_title('First order sensitivity index with 95 percent CI')
+ax.set_xlabel('SI index')
+plt.setp(ax.get_yticklabels(), rotation=45, ha="right",
+         rotation_mode="anchor")
+plt.show()
+
+fig, ax = plt.subplots(figsize = (5,5))
+
+ax.errorbar(Si['ST'],x, xerr = Si['ST_conf'], fmt = 'o')
+ax.set_title('Strong sensitivity index with 95 percent CI')
+ax.set_xlabel('SI index')
+plt.setp(ax.get_yticklabels(), rotation=45, ha="right",
+         rotation_mode="anchor")
+plt.show()
+
+fig, ax = plt.subplots(figsize = (5,5))
+
+ax.errorbar(Si['S2'][0],x, xerr = Si['S2_conf'][0], fmt = 'o')
+ax.set_title('Second order sensitivity index of spawning probability with 95 percent CI')
+ax.set_xlabel('SI index')
+plt.setp(ax.get_yticklabels(), rotation=45, ha="right",
+         rotation_mode="anchor")
+plt.show()
+
+
+with open('sensitivity_results.csv', 'w+') as file:
 	file.write(str(Si))
 	file.write('First order sensitivity indices : ' + str(Si['S1']))
 	file.write('Second order sensitivity indices : ' + str(Si['ST']))
 	file.write('Interaction sensitivity indices : ' + str(Si['S2']))
-print('Done!')
+
