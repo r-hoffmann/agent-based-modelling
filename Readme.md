@@ -24,6 +24,7 @@ To launch the mesa server, run:
     $ python run.py
 ```
 
+Hereby it is important to note that Python 3 is used to run the program.
 If your browser doesn't open automatically, point it to [http://localhost:8523/](http://localhost:8523/). When the visualization loads, press Reset, then Run.
 
 ## How to run the jupyter notebook for graphs
